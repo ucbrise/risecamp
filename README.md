@@ -51,3 +51,7 @@ which derives from `jupyter/base-notebook`.
 
 Create a new subdirectory within this repository, following the examples
 provided by the `hello-world` and `pyspark-notebook` containers.
+
+Any background setup required by your project (e.g. libraries, daemons, etc)
+should be performed in the Dockerfile. All instructional content should live in
+the Jupyter notebook.
