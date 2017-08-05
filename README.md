@@ -42,10 +42,10 @@ If you're already familiar with Docker and Jupyter, here's the high-order bits:
     http://localhost:8888/?token=3e18614852cd453007d747c83757c125e512b770a1df7e70
     ```
 
-6. You'll see a Jupyter instance with a "Hello-World" notebook in it. This
-notebook derives from
-[`jupyter/pyspark-notebook`](https://github.com/jupyter/docker-stacks/blob/master/pyspark-notebook/Dockerfile),
-which derives from `jupyter/base-notebook`.
+6. You'll see a Jupyter instance with a "Hello-World" notebook in it. The
+   `Dockerfile` in this example derives from
+   [`jupyter/pyspark-notebook`](https://github.com/jupyter/docker-stacks/blob/master/pyspark-notebook/Dockerfile),
+   which ultimately derives from `jupyter/base-notebook`.
 
 ### Adding a new tutorial:
 
@@ -53,5 +53,7 @@ Create a new subdirectory within this repository, following the examples
 provided by the `hello-world` and `pyspark-notebook` containers.
 
 Any background setup required by your project (e.g. libraries, daemons, etc)
-should be performed in the Dockerfile. All instructional content should live in
-the Jupyter notebook.
+should be performed in the Dockerfile (see
+[`jupyter/pyspark-notebook`](https://github.com/jupyter/docker-stacks/blob/master/pyspark-notebook/Dockerfile)
+for a good example). All instructional content should live in the Jupyter
+notebook.
