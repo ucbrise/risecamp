@@ -1,6 +1,7 @@
 import datetime
 import msgpack
 import os
+import base64
 import socket
 import sys
 import threading
@@ -948,4 +949,63 @@ class Client(object):
             del self.synchronous_cond_vars[seq_num]
 
         if result.status != "okay":
-            raise RuntimeError("View publish failed: " + response.reason)
+            raise RuntimeError("View publish failed: " + result.reason)
+
+    def resolveAlias(self, alias):
+        seq_num = Frame.generateSequenceNumber()
+        frame = Frame("resa", seq_num)
+        frame.addKVPair("longkey", alias)
+
+        def responseHandler(response):
+            with self.synchronous_results_lock:
+                self.synchronous_results[seq_num] = response
+                self.synchronous_cond_vars[seq_num].notify()
+
+        with self.response_handlers_lock:
+            self.response_handlers[seq_num] = responseHandler
+        with self.synchronous_results_lock:
+            self.synchronous_cond_vars[seq_num] = \
+                    threading.Condition(self.synchronous_results_lock)
+        frame.writeToSocket(self.socket)
+
+        with self.synchronous_results_lock:
+            while not seq_num in self.synchronous_results:
+                self.synchronous_cond_vars[seq_num].wait()
+            result = self.synchronous_results.pop(seq_num)
+            del self.synchronous_cond_vars[seq_num]
+
+        if result.status != "okay":
+            raise RuntimeError("Resolve failed: " + result.reason)
+        val = result.getFirstValue("value")
+        if val is not None:
+            return base64.urlsafe_b64encode(str(val))
+        else:
+            return None
+
+    def unresolveAlias(self, b64_blob):
+        blob = base64.urlsafe_b64decode(b64_blob)
+        seq_num = Frame.generateSequenceNumber()
+        frame = Frame("resa", seq_num)
+        frame.addKVPair("unresolve", blob)
+
+        def responseHandler(response):
+            with self.synchronous_results_lock:
+                self.synchronous_results[seq_num] = response
+                self.synchronous_cond_vars[seq_num].notify()
+
+        with self.response_handlers_lock:
+            self.response_handlers[seq_num] = responseHandler
+        with self.synchronous_results_lock:
+            self.synchronous_cond_vars[seq_num] = \
+                    threading.Condition(self.synchronous_results_lock)
+        frame.writeToSocket(self.socket)
+
+        with self.synchronous_results_lock:
+            while not seq_num in self.synchronous_results:
+                self.synchronous_cond_vars[seq_num].wait()
+            result = self.synchronous_results.pop(seq_num)
+            del self.synchronous_cond_vars[seq_num]
+
+        if result.status != "okay":
+            raise RuntimeError("Unresolve failed: " + result.reason)
+        return result.getFirstValue("value")

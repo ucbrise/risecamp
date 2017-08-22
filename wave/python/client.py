@@ -128,6 +128,7 @@ if __name__ == '__main__':
         print msg.payload
         c.publish('scratch.ns/abc',(2,0,0,1), {'abc': 123})
     c.subscribe("ciee/*", cb, "2.0.0.0/8")
+    print c.resolveAlias("ciee")
     import time
     while True:
         time.sleep(100)
