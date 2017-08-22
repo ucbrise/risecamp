@@ -1,0 +1,16 @@
+#!/bin/bash
+printf "\033[1;32mHello {owner of namespace entity}. Can I have access to your namespace? My entity is $1 \033[0m\n"
+bw2 i $1 | grep "UNKNOWN"
+if [[ $? -eq 0 ]] ; then
+    printf "\033[1;31mI don't see your entity in the blockchain yet. If you just published it, try waiting a minute or two\033[0m\n"
+    exit 1
+fi
+
+printf "\033[1;34mHello! I'm granting you permissions on $NAMESPACE/* now \033[0m\n"
+bw2 mkdot -f ns.ent -t $1 -u $NAMESPACE/* --ttl 5
+
+if [[ $? -eq 0 ]] ; then
+    printf "\033[1;34mFinished! You can now pub/sub on $NAMESPACE/* \033[0m\n"
+else
+    printf "\033[1;31mSomething bad happened\033[0m\n"
+fi
