@@ -7,7 +7,7 @@ RUN ln -sf python2 `which python`
 RUN python2 -m pip install ipython==5.4 ipykernel
 RUN python2 -m ipykernel install --user
 RUN pip2 install --upgrade pip
-RUN pip2 install msgpack-python requests ipywidgets
+RUN pip2 install msgpack-python requests pytz ipywidgets
 RUN jupyter nbextension enable --py  --sys-prefix widgetsnbextension
 RUN chown -R $NB_USER /home/$NB_USER/.local/share/jupyter
 RUN mkdir -p /home/$NB_USER/.ipynb_checkpoints

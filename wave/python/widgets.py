@@ -2,6 +2,7 @@ from client import get_client
 import ipywidgets as widgets
 from datetime import datetime
 import os
+import pytz
 
 class Light():
     def __init__(self, namespace = None, name = "light0", bw_entity = "light.ent", bw_agent = None):
@@ -56,19 +57,25 @@ class Light():
 
     def _callback(self, msg):
         # print "received: ", msg.payload
-        time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S (%Z)")
+        pacific = pytz.timezone('America/Los_Angeles')
+        time_str = pacific.localize(datetime.now()).strftime("%Y-%m-%d %H:%M:%S (%Z)")
+        from_name = msg.from_vk
+        from_alias = self._bw_client.unresolveAlias(msg.from_vk)
+        print from_alias
+        if from_alias is not None and from_alias != "":
+            from_name = from_alias
         if msg.payload.lower() == "true":
-            self._append_text("[" + time_str + "] light is turned on.")
+            self._append_text("[" + time_str + "] light is turned on by " + from_name)
             self._light.value = self._img_light_on
         elif msg.payload.lower() == "false":
-            self._append_text("[" + time_str + "] light is turned off.")
+            self._append_text("[" + time_str + "] light is turned off by " + from_name)
             self._light.value = self._img_light_off
         elif msg.payload.lower() == "toggle":
             if self._light.value is self._img_light_off:
-                self._append_text("[" + time_str + "] light is toggled on.")
+                self._append_text("[" + time_str + "] light is toggled on by " + from_name)
                 self._light.value = self._img_light_on
             elif self._light.value is self._img_light_on:
-                self._append_text("[" + time_str + "] light is toggled off.")
+                self._append_text("[" + time_str + "] light is toggled off by " + from_name)
                 self._light.value = self._img_light_off
 
     def _append_text(self, text):

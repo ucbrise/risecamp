@@ -191,6 +191,7 @@ class BosswaveResponse(object):
         self.status = status
         self.reason = reason
         self.kv_pairs = kv_pairs
+        self.from_vk = self.getFirstValue("from")
         self.routing_objects = routing_objects
         self.payload_objects = payload_objects
 
@@ -202,8 +203,8 @@ class BosswaveResponse(object):
             return None
 
 class BosswaveResult(object):
-    def __init__(self, from_, uri, kv_pairs, routing_objects, payload_objects):
-        self.from_ = from_
+    def __init__(self, from_vk, uri, kv_pairs, routing_objects, payload_objects):
+        self.from_vk = from_vk
         self.uri = uri
         self.kv_pairs = kv_pairs
         self.routing_objects = routing_objects
