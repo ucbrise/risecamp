@@ -39,4 +39,10 @@ RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --si
 
 COPY clipper_exercises.ipynb query_cifar.ipynb __init__.py cifar_utils.py \
       ./
+
+USER root
+RUN chown jovyan:users -R /home/$NB_USER/
+USER $NBUSER
+
 # vim: set filetype=dockerfile:
+#
