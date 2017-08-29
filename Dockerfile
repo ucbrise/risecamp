@@ -1,6 +1,7 @@
 # vim: set filetype=dockerfile:
 FROM jupyter/pyspark-notebook
 
+
 #### common
 USER root
 
@@ -11,7 +12,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B
 # install deps
 RUN apt-get update && apt-get install -y \
   python2.7 postgresql git tmux apt-transport-https ca-certificates curl software-properties-common \
-  libzmq5
+  libzmq5 daemon python-pip graphviz
+RUN pip2 install --upgrade pip
 
 # add docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
@@ -22,6 +24,7 @@ RUN gpasswd -a $NB_USER docker
 
 # add sbt (after docker to get expected GIDs)
 RUN apt-get install -y sbt
+
 
 #### clipper
 USER $NB_USER
@@ -58,6 +61,7 @@ COPY \
 USER root
 RUN chown jovyan:users -R /home/$NB_USER/clipper
 
+
 #### ground
 USER root
 
@@ -89,19 +93,52 @@ COPY ground/Ground.ipynb /home/$NB_USER/ground/
 
 RUN chmod +x /home/$NB_USER/ground/ground_start.sh
 
+
 #### ray
-USER $NBUSER
+USER $NB_USER
 
 RUN pip install ray && \
     pip install tensorflow==1.3.0 && \
     pip install gym==0.9.2
 
-RUN mkdir -p /home/$UB_USER/ray
+RUN mkdir -p /home/$NB_USER/ray
 COPY ray/ray-test.ipynb /home/$NB_USER/ray/
 COPY ray/tutorial /home/$NB_USER/ray/
 
-#### finalize
-RUN conda install -y GitPython
-CMD cd /home/$NB_USER && ./ground/ground_start.sh
 
-USER $NBUSER
+#### wave
+USER root
+RUN pip2 install msgpack-python requests pytz ipywidgets
+RUN jupyter nbextension enable --py  --sys-prefix widgetsnbextension
+RUN mkdir -p /home/$NB_USER/.ipynb_checkpoints /home/$NB_USER/wave
+COPY wave/getentity.py /usr/local/bin/
+COPY wave/getaccess /home/$NB_USER
+# FIXME: rename to start-wave.sh?
+COPY wave/start.sh /usr/local/bin/
+COPY wave/ragent /bin/
+RUN chmod 0755 /bin/ragent
+COPY wave/bw2 /bin/
+COPY wave/bw2lint /bin/
+COPY wave/rise_entity.ent /etc/
+COPY wave/WAVE.ipynb /home/$NB_USER/wave
+COPY wave/ExamineNamespace.ipynb /home/$NB_USER/wave
+
+ADD wave/images /home/$NB_USER/wave/images
+ADD wave/python /home/$NB_USER/wave
+ENV PYTHONPATH /home/$NB_USER/wave/python
+RUN rm -f /home/$NB_USER/.bw2bind.log
+RUN chown -R $NB_USER:users /home/$NB_USER/wave
+
+
+#### pywren
+USER $NB_USER
+RUN mkdir -p /home/$NB_USER/pywren
+COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
+
+
+#### finalize
+COPY ./risecamp_start.sh /opt
+CMD cd /home/$NB_USER && /opt/risecamp_start.sh
+
+USER root
+RUN chown -R $NB_USER:users /home/$NB_USER
