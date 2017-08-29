@@ -142,3 +142,4 @@ CMD cd /home/$NB_USER && /opt/risecamp_start.sh
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
+RUN pip install jupyterhub==0.8.0.b3
