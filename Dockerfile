@@ -138,6 +138,7 @@ COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
 
 #### finalize
 COPY ./risecamp_start.sh /opt
+COPY ./.jupyter /home/$NB_USER/
 CMD cd /home/$NB_USER && /opt/risecamp_start.sh
 
 USER root
