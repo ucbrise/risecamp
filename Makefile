@@ -7,4 +7,4 @@ build:
 	
 .PHONY: run
 run: build
-	docker run -it --rm -p 8888:8888 -v /var/run/docker.sock:/var/run/docker.sock --shm-size 2048m risecamp2017
+	docker run --rm -p 8888:8888 -v /var/run/docker.sock:/var/run/docker.sock --shm-size 2048m risecamp2017
