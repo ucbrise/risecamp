@@ -1,3 +1,3 @@
 #!/bin/bash
-./ground/ground_start.sh
+./ground/ground_start.sh &
 start-notebook.sh
