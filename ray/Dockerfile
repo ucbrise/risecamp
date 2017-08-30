@@ -2,7 +2,7 @@ FROM jupyter/pyspark-notebook
 
 MAINTAINER Alexey Tumanov <atumanov@gmail.com>
 
-RUN pip install ray && \
+RUN pip install ray==0.2.0 && \
     pip install tensorflow==1.3.0 && \
     pip install gym==0.9.2
 
