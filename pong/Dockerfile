@@ -37,9 +37,9 @@ RUN /bin/bash -c "source activate py2 && \
       pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 
-COPY rl_exercise06.ipynb pong_py/ ./
+COPY rl_exercise06.ipynb pong_py_no_git/ ./
 
-RUN /bin/bash -c "source activate py2 && pip install -e pong_py"
+RUN /bin/bash -c "source activate py2 && pip install -e pong_py_no_git"
 
 USER root
 RUN chown jovyan:users -R /home/$NB_USER/
