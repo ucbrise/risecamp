@@ -90,7 +90,7 @@ RUN chmod +x /home/$NB_USER/ground/ground_start.sh
 #### ray
 USER $NB_USER
 
-RUN pip install ray && \
+RUN pip install ray==0.2.0 && \
     pip install tensorflow==1.3.0 && \
     pip install gym==0.9.2
 
@@ -122,10 +122,19 @@ RUN rm -f /home/$NB_USER/.bw2bind.log
 
 
 #### pywren
-USER $NB_USER
+USER root
 RUN mkdir -p /home/$NB_USER/pywren
-COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
+RUN mkdir -p /opt/pywren
+COPY pywren/config_encoder.py /opt/pywren/
+COPY pywren/pywren_start.sh /opt/pywren/
+RUN chown $NB_USER /opt/pywren
+RUN chmod a+x /opt/pywren/config_encoder.py
+RUN chmod a+x /opt/pywren/pywren_start.sh
 
+USER $NB_USER
+COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
+RUN pip install pywren
+ENV PYWREN_LOGLEVEL INFO
 
 #### finalize
 COPY ./risecamp_start.sh /opt
