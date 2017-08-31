@@ -138,7 +138,7 @@ RUN chmod a+x /opt/pywren/training.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
-COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
+COPY pywren/*.ipynb /home/$NB_USER/pywren/
 RUN pip install pywren
 ENV PYWREN_LOGLEVEL INFO
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
