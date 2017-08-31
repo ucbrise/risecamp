@@ -18,19 +18,19 @@ class PongPolicyContainer(rpc.ModelContainerBase):
             pong_py
 
         config = DEFAULT_CONFIG.copy()
-        config['num_agents'] = 0
+        config['num_workers'] = 3
         config['num_sgd_iter'] = 20
-        config['sgd_batchsize'] = 1024
-        config['model']['fcnet_hiddens'] = []
-        config['load_checkpoint'] = path
-        self.algorithm = PPOAgent('PongJS-v0', config)
+        config['sgd_batchsize'] = 8196
+        config['model']['fcnet_hiddens'] = [32, 32]
+        self.agent = PPOAgent('PongJS-v0', config)
+        self.agent.restore(checkpoint_path)
         # Run test prediction to load the model
         print("Predicted {} in constructor".format(
-            self.algorithm.compute_action(np.random.random(8))))
+            self.agent.compute_action(np.random.random(9))))
 
     def predict_doubles(self, states):
         start = datetime.now()
-        actions = [str(self.algorithm.compute_action(s)) for s in states]
+        actions = [str(self.agent.compute_action(s)) for s in states]
         end = datetime.now()
         print("Computed action in {} ms".format((end-start).total_seconds() * 1000.0))
         return actions
