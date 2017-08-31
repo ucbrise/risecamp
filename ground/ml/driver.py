@@ -99,25 +99,25 @@ def debug():
 	nodeVersions = []
 	nodeVersionHistory = client.getNodeVersionHistory("table_tweets")
 	parent = '0'
-	print ''
-	print "History of table schema for tweets, ordered from oldest to latest."
-	print ''
+	print( '' )
+	print( "History of table schema for tweets, ordered from oldest to latest.")
+	print( '' )
 	while parent in nodeVersionHistory:
 		child = str(nodeVersionHistory[parent])
 		nodeVersion = client.getNodeVersion(child)
 		pp.pprint(nodeVersion["tags"])
-		print ''
-		print ''
+		print( '' )
+		print( '' )
 		nodeVersions.append(nodeVersion)
 		parent = child
 	return nodeVersions
 
 
 def test_latest():
-	print client.getNodeVersionLatest("table_tweets")
+	print (client.getNodeVersionLatest("table_tweets"))
 
 def test_history():
-	print client.getNodeVersionHistory("table_tweets")
+	print (client.getNodeVersionHistory("table_tweets"))
 
 flag = sys.argv[1]
 if flag == "i":

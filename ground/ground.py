@@ -30,13 +30,50 @@ class GroundClient:
 
         return r.json()
 
-    def create_node_version(self, node_id, tags, parents):
-        r = requests.post(self.address + '/versions/nodes', json = {'nodeId': node_id, 'tags': tags, "parentIds": parents})
+    def create_node_version(self, node_id, tags, parents, structure_id=-1):
+        if structure_id == -1:
+            r = requests.post(self.address + '/versions/nodes', json = {'nodeId': node_id, 'tags': tags, "parentIds": parents})
+        else:
+            r = requests.post(self.address + '/versions/nodes', json = {'structureVersionId': structure_id, 'nodeId': node_id, 'tags': tags, "parentIds": parents})
 
         return r.json()
 
-    def get_latest(self, node_key):
+    def get_node_latest(self, node_key):
         node_key = node_key.replace('/', '%2F')
         r = requests.get(self.address + '/nodes/' + node_key + '/latest')
 
         return r.json()
+
+    def get_structure_latest(self, structure_key):
+        r = requests.get(self.address + '/structures/' + structure_key + '/latest')
+
+        return r.json()
+
+    def get_structure(self, structure_key):
+        r = requests.get(self.address + '/structures/' + structure_key)
+
+        if r.status_code != 200:
+            return None
+        else:
+            return r.json()
+
+    def create_structure(self, structure_key, name):
+        r = requests.post(self.address + '/structures', json = {'sourceKey': structure_key, 'name': name})
+
+        return r.json()
+
+    def create_structure_version(self, attributes, structure_id):
+        r = requests.post(self.address + '/versions/structures', json = {'structureId': structure_id, 'attributes': attributes})
+
+        return r.json()
+
+    def create_lineage_edge(self, le_key, name):
+        r = requests.post(self.address + '/lineage_edges', json = {'sourceKey': le_key, 'name': name})
+
+        return r.json()
+
+    def create_le_version(self, le_id, from_rv_id, to_rv_id, tags={}):
+        r = requests.post(self.address + '/versions/lineage_edges', json = {'lineageEdgeId': le_id, 'fromRichVersionId': from_rv_id, 'toRichVersionId': to_rv_id, 'tags': tags})
+
+        return r.json()
+

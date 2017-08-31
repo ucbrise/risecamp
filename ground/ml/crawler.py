@@ -11,7 +11,7 @@ flag = sys.argv[1]
 try:
 	conn = psycopg2.connect(connection_string)
 except:
-	print "I am unable to connect to the database."
+	print("I am unable to connect to the database.")
 
 cur = conn.cursor()
 if flag == "tr":
