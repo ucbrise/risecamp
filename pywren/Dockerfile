@@ -3,10 +3,12 @@ FROM jupyter/pyspark-notebook
 USER root
 RUN mkdir -p /pywren-setup
 COPY config_encoder.py /pywren-setup/
+COPY training.py /pywren-setup/
 COPY pywren_start.sh /pywren-setup/
 RUN chown $NB_USER /pywren-setup
 RUN chmod a+x /pywren-setup/config_encoder.py
 RUN chmod a+x /pywren-setup/pywren_start.sh
+RUN chmod a+r /pywren-setup/training.py
 
 USER $NB_USER
 
