@@ -25,7 +25,7 @@ COPY tf_cifar_model/ tf_cifar_model/
 ENV DATA cifar/
 
 RUN mkdir -p $DATA \
-      && /bin/bash -c "source activate py2 && conda install -y -q numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow"
+      && /bin/bash -c "source activate py2 && conda install -y -q numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn"
 
 RUN /bin/bash -c "source activate py2 && python ./setup/download_cifar.py $DATA \
       && python ./setup/extract_cifar.py $DATA 10000 10000"
