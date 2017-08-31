@@ -23,7 +23,7 @@ class PongPolicyContainer(rpc.ModelContainerBase):
         config['sgd_batchsize'] = 8196
         config['model']['fcnet_hiddens'] = [32, 32]
         self.agent = PPOAgent('PongJS-v0', config)
-        self.agent.restore(checkpoint_path)
+        self.agent.restore(path)
         # Run test prediction to load the model
         print("Predicted {} in constructor".format(
             self.agent.compute_action(np.random.random(9))))

@@ -30,8 +30,8 @@ RUN mkdir -p $DATA \
       && pip install ray==0.2.0 tensorflow==1.3.0 gym==0.9.2 smart_open"
 
 # TODO: update to pip install clipper==0.2.0 once the Clipper release is pushed
-RUN git clone https://github.com/dcrankshaw/clipper.git --branch clipper_admin_v2 --single-branch \
-      && /bin/bash -c "source activate py2 && pip install -e ./clipper/clipper_admin"
+RUN /bin/bash -c "source activate py2 && \
+      pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 
 COPY rl_exercise06.ipynb pong_py/ ./
