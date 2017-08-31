@@ -32,8 +32,8 @@ RUN /bin/bash -c "source activate py2 && python ./setup/download_cifar.py $DATA 
 
 
 # TODO: update to pip install clipper==0.2.0 once the Clipper release is pushed
-RUN git clone https://github.com/dcrankshaw/clipper.git --branch clipper_admin_v2 --single-branch \
-      && /bin/bash -c "source activate py2 && pip install -e ./clipper/clipper_admin"
+RUN /bin/bash -c "source activate py2 && \
+      pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 
 COPY clipper_exercises.ipynb query_cifar.ipynb __init__.py cifar_utils.py \
