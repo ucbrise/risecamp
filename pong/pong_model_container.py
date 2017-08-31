@@ -4,6 +4,7 @@ import os
 import sys
 import pong_py
 import ray
+import json
 from datetime import datetime
 from ray.rllib.ppo import PPOAgent, DEFAULT_CONFIG
 import rpc
@@ -26,7 +27,7 @@ class PongPolicyContainer(rpc.ModelContainerBase):
         self.agent.restore(path)
         # Run test prediction to load the model
         print("Predicted {} in constructor".format(
-            self.agent.compute_action(np.random.random(9))))
+            self.agent.compute_action(np.random.random(8))))
 
     def predict_doubles(self, states):
         start = datetime.now()
@@ -66,7 +67,9 @@ if __name__ == "__main__":
         print("Connecting to Clipper with default port: 7000")
 
     input_type = "doubles"
-    model_dir_path = "/model/checkpoint/"
-    model = PongPolicyContainer(model_dir_path)
+    model_dir_path = "/model"
+    with open(os.path.join(model_dir_path, "metadata.json"), "r") as f:
+        checkpoint_file = json.load(f)["checkpoint"]
+    model = PongPolicyContainer(os.path.join(model_dir_path, checkpoint_file))
     rpc_service = rpc.RPCService()
     rpc_service.start(model, ip, port, model_name, model_version, input_type)
