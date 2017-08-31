@@ -1,4 +1,4 @@
-import ground
+from ground import GroundClient
 import os
 
 gc = GroundClient()
@@ -12,17 +12,38 @@ def add_file(file_path):
     # get the file creation time
     ctime = stat[-1]
 
-    sv_id = create_structure()['id']
+    tags = {
+        'size': {
+            'key': 'size',
+            'value': size,
+            'type': 'integer'
+        },
+        'ctime': {
+            'key': 'ctime',
+            'value': ctime,
+            'type': 'integer'
+        },
+        'path': {
+            'key': 'path',
+            'value': file_path,
+            'type': 'string'
+        }
+    }
+
+    sv_id = create_structure()
+
+    file_path = file_path.split('/')[-1]
 
     node_id = gc.create_node(file_path, file_path)['id']
-    gc.create_node_version(node_id, tags)
+    node_version = gc.create_node_version(node_id, tags, [], structure_id=sv_id)
+    return node_version
 
 
 def create_structure():
     struct = gc.get_structure("dataset")
 
     if struct == None:
-        gc.create_structure("dataset", "dataset")
-        return gc.create_structure_version("dataset", {"size": "integer", "ctime": "integer", "path": "string"})
+        structure_id = gc.create_structure("dataset", "dataset")['id']
+        return gc.create_structure_version({"size": "integer", "ctime": "integer", "path": "string"}, structure_id)['id']
     else:
-        return gc.get_structure_latest("dataset")
+        return gc.get_structure_latest("dataset")[0]
