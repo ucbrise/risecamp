@@ -1,11 +1,13 @@
 from __future__ import print_function
 import numpy as np
 import os
+import sys
 import pong_py
 import ray
 from datetime import datetime
-from ray.rllib.policy_gradient import PolicyGradient, DEFAULT_CONFIG
+from ray.rllib.ppo import PPOAgent, DEFAULT_CONFIG
 import rpc
+
 
 class PongPolicyContainer(rpc.ModelContainerBase):
     def __init__(self, path):
@@ -21,10 +23,10 @@ class PongPolicyContainer(rpc.ModelContainerBase):
         config['sgd_batchsize'] = 1024
         config['model']['fcnet_hiddens'] = []
         config['load_checkpoint'] = path
-        self.algorithm = PolicyGradient('PongJS-v0', config)
-
+        self.algorithm = PPOAgent('PongJS-v0', config)
         # Run test prediction to load the model
-        print("Predicted {} in constructor".format(self.algorithm.compute_action(np.random.random(8))))
+        print("Predicted {} in constructor".format(
+            self.algorithm.compute_action(np.random.random(8))))
 
     def predict_doubles(self, states):
         start = datetime.now()

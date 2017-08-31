@@ -22,8 +22,6 @@ COPY setup/ setup/
 COPY img/ img/
 COPY tf_cifar_model/ tf_cifar_model/ 
 
-# RUN python2 -m pip install ipykernel && python2 -m ipykernel install --user
-
 ENV DATA cifar/
 
 RUN mkdir -p $DATA \
@@ -33,8 +31,9 @@ RUN /bin/bash -c "source activate py2 && python ./setup/download_cifar.py $DATA 
       && python ./setup/extract_cifar.py $DATA 10000 10000"
 
 
-RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --single-branch \
-      && /bin/bash -c "source activate py2 && pip install -e ./clipper/clipper_admin_v2"
+# TODO: update to pip install clipper==0.2.0 once the Clipper release is pushed
+RUN git clone https://github.com/dcrankshaw/clipper.git --branch clipper_admin_v2 --single-branch \
+      && /bin/bash -c "source activate py2 && pip install -e ./clipper/clipper_admin"
 
 
 COPY clipper_exercises.ipynb query_cifar.ipynb __init__.py cifar_utils.py \
