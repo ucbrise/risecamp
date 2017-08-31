@@ -9,6 +9,12 @@ RUN apt-get update && apt-get install -yqq libzmq5 git \
       && apt-get update \
       && apt-get install -yqq docker-ce
 
+# Install Ray dependencies
+RUN apt-get update \
+    && apt-get install -y vim git wget gcc \
+    && apt-get install -y cmake pkg-config build-essential autoconf curl libtool libboost-dev \
+    libboost-filesystem-dev libboost-system-dev unzip libzmq5-dev zlib1g-dev
+
 RUN gpasswd -a $NB_USER docker
 
 USER $NB_USER
@@ -18,15 +24,7 @@ RUN /bin/bash -c "source activate py2 && ipython kernel install --user"
 
 WORKDIR /home/$NB_USER
 
-
 ENV DATA cifar/
-
-# Install Ray dependencies
-
-RUN apt-get update \
-    && apt-get install -y vim git wget gcc \
-    && apt-get install -y cmake pkg-config build-essential autoconf curl libtool libboost-dev \
-    libboost-filesystem-dev libboost-system-dev unzip libzmq5-dev zlib1g-dev
 
 RUN mkdir -p $DATA \
       && /bin/bash -c "source activate py2 && conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow \
@@ -37,9 +35,10 @@ RUN /bin/bash -c "source activate py2 && \
       pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 
-COPY rl_exercise06.ipynb pong_py_no_git/ ./
+COPY rl_exercise06.ipynb ./
+COPY pong_py_no_git/ ./pong_py_no_git
 
-RUN /bin/bash -c "source activate py2 && pip install -e pong_py_no_git"
+RUN /bin/bash -c "source activate py2 && pip install ./pong_py_no_git"
 
 USER root
 RUN chown jovyan:users -R /home/$NB_USER/

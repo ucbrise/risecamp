@@ -24,7 +24,8 @@ COPY __init__.py rpc.py /container/
 
 ENV CLIPPER_MODEL_PATH=/model
 
-COPY pong_model_container.py pong_py_no_git/ /container/
+COPY pong_model_container.py  /container/
+COPY pong_py_no_git/ /container/pong_py_no_git/
 RUN pip install /container/pong_py_no_git
 
 CMD ["python", "/container/pong_model_container.py"]
