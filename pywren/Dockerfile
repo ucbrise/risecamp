@@ -12,8 +12,11 @@ RUN chmod a+r /opt/pywren/training.py
 
 USER $NB_USER
 
-COPY pywren-risecamp.ipynb /home/$NB_USER
+COPY *.ipynb /home/$NB_USER/
+RUN mkdir /home/$NB_USER/solution
+COPY solution/*.ipynb /home/$NB_USER/solution/
 RUN pip install pywren
 ENV PYWREN_LOGLEVEL INFO
+ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 CMD cd /opt/pywren/ && bash pywren_start.sh && cd /home/$NB_USER && start-notebook.sh
