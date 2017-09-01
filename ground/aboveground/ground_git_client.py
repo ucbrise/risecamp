@@ -4,7 +4,7 @@ import os
 import git
 import requests
 import configparser
-from ground import GroundClient
+from aboveground.ground import GroundClient
 
 
 def get_commits(git_repo, latest_nodes):
@@ -77,14 +77,15 @@ def add_repo(repo_name):
 
     class MyProgressPrinter(git.RemoteProgress):
         def update(self, op_code, cur_count, max_count=None, message=''):
-            print(op_code, cur_count, max_count, cur_count / (max_count or 100.0),
-                  message or "NO MESSAGE")
-            # end
+            pass
+            # print(op_code, cur_count, max_count, cur_count / (max_count or 100.0), message or "NO MESSAGE")
 
-    print('fetching commits...')
+    # print('fetching commits...')
     for fetch_info in repo.remotes.origin.fetch(progress=MyProgressPrinter()):
-        print("Updated %s to %s" % (fetch_info.ref, fetch_info.commit))
-    print('commits fetched!')
+        pass
+        # print("Updated %s to %s" % (fetch_info.ref, fetch_info.commit))
+
+    print('Fetched commits!')
 
     g = git.Git('/tmp/repo')
     ground_repo_name = repo_name.split('/')[-1]

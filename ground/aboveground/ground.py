@@ -6,7 +6,7 @@ class GroundClient:
 
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read('config.ini')
+        config.read('aboveground/config.ini')
         self.address = 'http://' + config['Ground']['url'] + ':' + str(config['Ground']['port'])
 
 

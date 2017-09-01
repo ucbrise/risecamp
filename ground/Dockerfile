@@ -57,11 +57,10 @@ USER $NB_USER
 
 # copy new files in
 RUN mkdir /home/$NB_USER/risecamp/
-COPY *.py /home/$NB_USER/risecamp/
-COPY config.ini /home/$NB_USER/risecamp/
+COPY aboveground /home/$NB_USER/risecamp/aboveground
+COPY ml/ /home/$NB_USER/risecamp/ml/
 COPY *.sh /home/$NB_USER/
 COPY *.ipynb /home/$NB_USER/risecamp/
-COPY ml/ /home/$NB_USER/risecamp/ml/
 
 RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
 

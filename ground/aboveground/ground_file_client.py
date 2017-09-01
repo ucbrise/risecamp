@@ -1,4 +1,4 @@
-from ground import GroundClient
+from aboveground.ground import GroundClient
 import os
 
 gc = GroundClient()
