@@ -52,10 +52,6 @@ RUN pip3 install pandas
 RUN pip3 install numpy
 RUN pip3 install requests
 RUN pip3 install numpy
-RUN apt-get install -y python-pip
-RUN pip install psycopg2
-RUN pip install requests
-RUN pip install numpy
 
 USER $NB_USER
 
@@ -64,9 +60,8 @@ RUN mkdir /home/$NB_USER/risecamp/
 COPY *.py /home/$NB_USER/risecamp/
 COPY config.ini /home/$NB_USER/risecamp/
 COPY *.sh /home/$NB_USER/
-COPY Ground.ipynb /home/$NB_USER/risecamp/
+COPY *.ipynb /home/$NB_USER/risecamp/
 COPY ml/ /home/$NB_USER/risecamp/ml/
-
 
 RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
 
