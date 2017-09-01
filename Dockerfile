@@ -92,7 +92,11 @@ USER $NB_USER
 
 RUN pip install ray==0.2.0 && \
     pip install tensorflow==1.3.0 && \
-    pip install gym==0.9.2
+    pip install gym==0.9.2 && \
+    pip install smart_open && \
+    pip install opencv-python && \
+    pip install scipy
+
 
 RUN mkdir -p /home/$NB_USER/ray
 COPY ray/ray-test.ipynb /home/$NB_USER/ray/
@@ -134,7 +138,7 @@ RUN chmod a+x /opt/pywren/training.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
-COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
+COPY pywren/*.ipynb /home/$NB_USER/pywren/
 RUN pip install pywren
 ENV PYWREN_LOGLEVEL INFO
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
