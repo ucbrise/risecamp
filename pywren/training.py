@@ -1,3 +1,7 @@
+import boto3
+
+rise_camp_bucket = "ampcamp-data"
+
 def check_result_1(result):
     if result:
         if result == "hello world!":
@@ -93,3 +97,32 @@ def plot_pywren_execution(futures):
         fig.tight_layout()
 
     visualize_execution(info)
+
+
+def pywren_read_data(bucket, key):
+    s3client = boto3.client("s3")
+    r = s3client.get_object(Bucket=bucket, Key=key)
+    return r['Body'].read().decode()
+
+
+def list_keys_with_prefix(bucket, prefix):
+    """
+    Return a list of keys for the given prefix.
+    :param prefix: Prefix to filter object names.
+    :return: List of keys in bucket that match the given prefix.
+    :rtype: list of str
+    """
+    s3client = boto3.client("s3")
+    paginator = s3client.get_paginator('list_objects_v2')
+    operation_parameters = {'Bucket': bucket,
+                            'Prefix': prefix}
+    page_iterator = paginator.paginate(**operation_parameters)
+
+    key_list = []
+    for page in page_iterator:
+        for item in page['Contents']:
+            key_list.append(item['Key'])
+
+    items_to_remove = [prefix, prefix+"/", prefix+"/part-00000", prefix+"part-00000"]
+
+    return [item for item in key_list if item not in items_to_remove]
