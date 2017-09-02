@@ -3,7 +3,7 @@
 FROM jupyter/base-notebook
 USER root
 RUN apt-get update && apt-get install -yqq libzmq5 git \
-      apt-transport-https ca-certificates curl software-properties-common \
+      apt-transport-https ca-certificates curl software-properties-common net-tools \
       && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
       && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
       && apt-get update \
@@ -36,7 +36,7 @@ RUN /bin/bash -c "source activate py2 && \
       pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 
-COPY clipper_exercises.ipynb query_cifar.ipynb __init__.py cifar_utils.py \
+COPY clipper_exercises.ipynb query_cifar.ipynb __init__.py cifar_utils.py get_docker_ip.sh \
       ./
 
 USER root

@@ -3,7 +3,7 @@
 FROM jupyter/base-notebook
 USER root
 RUN apt-get update && apt-get install -yqq libzmq5 git \
-      apt-transport-https ca-certificates curl software-properties-common \
+      apt-transport-https ca-certificates curl software-properties-common net-tools \
       && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
       && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
       && apt-get update \
@@ -35,7 +35,7 @@ RUN /bin/bash -c "source activate py2 && \
       pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 
-COPY rl_exercise06.ipynb ./
+COPY rl_exercise06.ipynb get_docker_ip.sh ./
 COPY pong_py_no_git/ ./pong_py_no_git
 
 RUN /bin/bash -c "source activate py2 && pip install ./pong_py_no_git"
