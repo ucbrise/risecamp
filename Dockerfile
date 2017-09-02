@@ -10,14 +10,12 @@ RUN echo "deb http://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
 
 # install deps
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   python2.7 postgresql git tmux apt-transport-https ca-certificates curl software-properties-common \
-  libzmq5 daemon python-pip graphviz
+  libzmq5 daemon python-pip graphviz apt-utils
 RUN pip2 install --upgrade pip
 RUN python2 -m pip install ipython==5.4 ipykernel
-RUN python2 -m ipykernel install --user
-RUN pip2 install numpy pyzmq subprocess32 pandas matplotlib seaborn \
-      tensorflow msgpack-python requests pytz ipywidgets
+RUN pip2 install numpy msgpack-python requests pytz ipywidgets
 
 # add docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
@@ -29,30 +27,38 @@ RUN gpasswd -a $NB_USER docker
 # add sbt (after docker to get expected GIDs)
 RUN apt-get install -y sbt
 
+USER $NB_USER
+RUN python2 -m ipykernel install --user
 
 #### clipper
-USER root
+USER $NB_USER
+
+RUN conda create -n clipper_py2 python=2 jupyter
+RUN /bin/bash -c "source activate clipper_py2 && ipython kernel install --user --name clipper_py2 --display-name \"Python 2 for Clipper\""
 
 RUN mkdir -p /home/$NB_USER/clipper
 WORKDIR /home/$NB_USER/clipper
+
 COPY clipper/setup/ setup/
 COPY clipper/img/ img/
 COPY clipper/tf_cifar_model/ tf_cifar_model/
 
 ENV DATA cifar/
+
 RUN mkdir -p $DATA \
-      && python2 ./setup/download_cifar.py $DATA \
-      && python2 ./setup/extract_cifar.py $DATA 10000 10000
+      && /bin/bash -c "source activate clipper_py2 && conda install -y -q numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow"
 
-RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --single-branch
-RUN pip2 install -e ./clipper/clipper_admin_v2
+RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py $DATA \
+      && python ./setup/extract_cifar.py $DATA 10000 10000"
 
-COPY \
-  clipper/clipper_exercises.ipynb \
-  clipper/query_cifar.ipynb \
-  clipper/__init__.py \
-  clipper/cifar_utils.py \
-  ./
+RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --single-branch \
+      && /bin/bash -c "source activate clipper_py2 && pip install -e ./clipper/clipper_admin_v2"
+
+COPY clipper/clipper_exercises.ipynb \
+      clipper/query_cifar.ipynb \
+      clipper/__init__.py \
+      clipper/cifar_utils.py \
+      ./
 
 
 #### ground
@@ -147,8 +153,10 @@ ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 #### finalize
 COPY ./risecamp_start.sh /opt
 COPY ./.jupyter /home/$NB_USER/.jupyter
-CMD cd /home/$NB_USER && /opt/risecamp_start.sh
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
 RUN rmdir /home/$NB_USER/work
+
+WORKDIR /home/$NB_USER
+CMD cd /home/$NB_USER && /opt/risecamp_start.sh
