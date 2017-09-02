@@ -1,0 +1,67 @@
+<!DOCTYPE html> 
+<html>
+<head>
+  <title>Pong!</title> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+  <link href="../pong.css" media="screen, print" rel="stylesheet" type="text/css" /> 
+</head> 
+ 
+<body> 
+
+  <div id="sidebar">
+
+    <h2>This is Pong!</h2>
+
+    <ul class='parts'>
+      <li><a href='/'>Full Game</a></li>
+      <li><a href='/part1'><i>game runner</i> - Part 1</a></li>
+      <li><a href='/part2'><i>bouncing ball</i> - Part 2</a></li>
+      <li><a href='/part3' class='selected'><i>game loop</i> - Part 3</a></li>
+      <li><a href='/part4'><i>collision detection</i> - Part 4</a></li>
+      <li><a href='/part5'><i>computer AI</i> - Part 5</a></li>
+    </ul>
+
+    <div class='description'>
+      <p>
+        The classic game loop starts with a menu, waits for a user to start the game, runs
+        the game until there is a winner, or the user abandons it, and then goes back to the menu.
+      </p>
+      <p>
+        Here we have hooked up keyboard events to allow the user to move the paddles up and
+        down, start a 1 or 2 player game, and abandon the game in progress.
+      </p>
+      <p>
+        Press <b>1</b> for a single player game.<br>
+        Press <b>2</b> for a double player game.<br>
+        Press <b>0</b> to watch the computer play itself.
+      </p>
+      <p>
+        Player 1 moves using the <b>Q</b> and <b>A</b> keys.<br>
+        Player 2 moves using the <b>P</b> and <b>L</b> keys.
+      </p>
+      <p>
+        <b>Esc</b> can be used to abandon a game.
+      </p>
+      <p>
+        <b>NOTE:</b> The paddles will be innefective until we implement collision detection in the next section. 
+      </p>
+    </div>
+
+  </div>
+
+  <canvas id="game">
+    <div id="unsupported">
+      Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
+    </div>
+  </canvas>
+
+  <script src="game.js" type="text/javascript"></script> 
+  <script src="pong.js" type="text/javascript"></script>
+  <script type="text/javascript">
+  Game.ready(function() {
+    Game.start('game', Pong);
+  });
+  </script>
+
+</body> 
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html> 
+<html>
+<head>
+  <title>Pong!</title> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+  <link href="../pong.css" media="screen, print" rel="stylesheet" type="text/css" /> 
+</head> 
+ 
+<body> 
+
+  <div id="sidebar">
+
+    <h2>This is Pong!</h2>
+
+    <ul class='parts'>
+      <li><a href='/'>Full Game</a></li>
+      <li><a href='/part1' class='selected'><i>game runner</i> - Part 1</a></li>
+      <li><a href='/part2'><i>bouncing ball</i> - Part 2</a></li>
+      <li><a href='/part3'><i>game loop</i> - Part 3</a></li>
+      <li><a href='/part4'><i>collision detection</i> - Part 4</a></li>
+      <li><a href='/part5'><i>computer AI</i> - Part 5</a></li>
+    </ul>
+
+    <div class='description'>
+      <p>
+        The Game.Runner provides a 60fps double buffered canvas game loop, allowing the Game itself to concentrate
+        on updating its game state whenever the <b>update()</b> method is called and rendering itself every
+        time the <b>draw()</b> method is called.
+      </p>
+      <p>
+        The Game.Runner is intended to be re-usable for any canvas based javascript game.
+      </p>
+    </div>
+
+  </div>
+
+  <canvas id="game">
+    <div id="unsupported">
+      Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
+    </div>
+  </canvas>
+
+  <script src="game.js" type="text/javascript"></script> 
+  <script src="pong.js" type="text/javascript"></script>
+  <script type="text/javascript">
+  Game.ready(function() {
+    var pong = Game.start('game', Pong);
+  });
+  </script>
+
+</body> 
+</html>
