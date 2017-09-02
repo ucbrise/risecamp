@@ -120,6 +120,7 @@ COPY wave/ragent /bin/
 COPY wave/wave_start.sh /home/$NB_USER/wave
 RUN chmod 0755 /bin/ragent
 COPY wave/bw2 /bin/
+COPY wave/bw2 /bin/wave
 COPY wave/bw2lint /bin/
 COPY wave/rise_entity.ent /etc/
 COPY wave/WAVE.ipynb /home/$NB_USER/wave
