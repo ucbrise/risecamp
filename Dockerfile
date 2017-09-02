@@ -12,7 +12,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B
 # install deps
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   python2.7 postgresql git tmux apt-transport-https ca-certificates curl software-properties-common \
-  libzmq5 daemon python-pip graphviz apt-utils
+  daemon python-pip graphviz apt-utils net-tools vim git wget cmake pkg-config build-essential libboost-all-dev \
+  unzip libzmq5-dev zlib1g-dev
+
 RUN pip2 install --upgrade pip
 RUN python2 -m pip install ipython==5.4 ipykernel
 RUN pip2 install numpy msgpack-python requests pytz ipywidgets
@@ -32,12 +34,12 @@ RUN python2 -m ipykernel install --user
 
 #### clipper
 USER $NB_USER
-
-RUN conda create -n clipper_py2 python=2 jupyter
-RUN /bin/bash -c "source activate clipper_py2 && ipython kernel install --user --name clipper_py2 --display-name \"Python 2 for Clipper\""
-
 RUN mkdir -p /home/$NB_USER/clipper
 WORKDIR /home/$NB_USER/clipper
+
+RUN conda create -n clipper_py2 python=2 jupyter
+RUN /bin/bash -c "source activate clipper_py2 && \
+        ipython kernel install --user --name clipper_py2 --display-name \"Python 2 for Clipper\""
 
 COPY clipper/setup/ setup/
 COPY clipper/img/ img/
@@ -45,19 +47,23 @@ COPY clipper/tf_cifar_model/ tf_cifar_model/
 
 ENV DATA cifar/
 
-RUN mkdir -p $DATA \
-      && /bin/bash -c "source activate clipper_py2 && conda install -y -q numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow"
+RUN mkdir -p cifar/ \
+      && /bin/bash -c "source activate clipper_py2 && \
+        conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn && \
+        pip install ray==0.2.0 tensorflow==1.3.0 gym==0.9.2 smart_open"
 
-RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py $DATA \
-      && python ./setup/extract_cifar.py $DATA 10000 10000"
+RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py cifar/ && \
+      python ./setup/extract_cifar.py cifar/ 10000 10000"
 
-RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --single-branch \
-      && /bin/bash -c "source activate clipper_py2 && pip install -e ./clipper/clipper_admin_v2"
+# TODO: update to pip install clipper==0.2.0 once the Clipper release is pushed
+RUN /bin/bash -c "source activate clipper_py2 && \
+      pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin"
 
 COPY clipper/clipper_exercises.ipynb \
       clipper/query_cifar.ipynb \
       clipper/__init__.py \
       clipper/cifar_utils.py \
+      clipper/get_docker_ip.sh \
       ./
 
 
@@ -154,6 +160,15 @@ COPY pywren/*.ipynb /home/$NB_USER/pywren/
 RUN pip install pywren
 ENV PYWREN_LOGLEVEL INFO
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
+
+
+#### pong
+USER $NB_USER
+RUN mkdir -p /home/$NB_USER/pong
+WORKDIR /home/$NB_USER/pong
+COPY pong/rl_exercise06.ipynb pong/get_docker_ip.sh ./
+COPY pong/pong_py_no_git/ ./pong_py_no_git
+RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 
 #### finalize
