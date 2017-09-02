@@ -424,47 +424,60 @@ Pong = {
     },
 
     ai: function(dt, ball) {
-      // From https://stackoverflow.com/a/24468752/814642
-      this.url = 'http://localhost:1337/pong/predict';
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', this.url, false);
-      xhr.setRequestHeader('Content-type', 'application/json');
-      // xhr.onreadystatechange = function() {
-      //   if (xhr.readyState === 4 && xhr.status === 200) {
-      //   }
-      // };
-
-      // var features = [
-      //   ball.y - this.pong.leftPaddle.y, this.pong.leftPaddle.y,
-      //   this.pong.rightPaddle.y, ball.x, ball.y, ball.dx, ball.dy,
-      //   ball.x,  // TODO: this should be x_prev
-      //   ball.y   // TODO: this should be y_prev
-      // ];
 
       var features = [0.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0];
 
       var data = JSON.stringify({'input': features});
-      xhr.send(data);
 
-      if (xhr.status === 200) {
-        var json = JSON.parse(xhr.responseText);
-        if (json.output === '0') {
-          this.stopMovingUp();
-          this.stopMovingDown();
-        } else if (json.output === '1') {
-          this.stopMovingUp();
-          this.moveDown();
-        } else if (json.output === '2') {
-          this.stopMovingDown();
-          this.moveUp();
-        } else {
-          this.stopMovingUp();
-          this.stopMovingDown();
-        }
-        return;
-      } else {
-        console.log('Error: ' + xhr.responseText);
-      }
+      fetch('http://localhost:3000/predict', {
+        method: 'POST',
+        redirect: 'follow',
+        headers: new Headers({'Content-Type': 'application/json'}),
+        body: data
+      }).then(function(response) {
+        console.log(response.status)
+      });
+
+
+
+      // // From https://stackoverflow.com/a/24468752/814642
+      // this.url = 'http://localhost:1337/pong/predict';
+      // var xhr = new XMLHttpRequest();
+      // xhr.open('POST', this.url, false);
+      // xhr.setRequestHeader('Content-type', 'application/json');
+      // // xhr.onreadystatechange = function() {
+      // //   if (xhr.readyState === 4 && xhr.status === 200) {
+      // //   }
+      // // };
+      //
+      // // var features = [
+      // //   ball.y - this.pong.leftPaddle.y, this.pong.leftPaddle.y,
+      // //   this.pong.rightPaddle.y, ball.x, ball.y, ball.dx, ball.dy,
+      // //   ball.x,  // TODO: this should be x_prev
+      // //   ball.y   // TODO: this should be y_prev
+      // // ];
+      //
+      // xhr.send(data);
+      //
+      // if (xhr.status === 200) {
+      //   var json = JSON.parse(xhr.responseText);
+      //   if (json.output === '0') {
+      //     this.stopMovingUp();
+      //     this.stopMovingDown();
+      //   } else if (json.output === '1') {
+      //     this.stopMovingUp();
+      //     this.moveDown();
+      //   } else if (json.output === '2') {
+      //     this.stopMovingDown();
+      //     this.moveUp();
+      //   } else {
+      //     this.stopMovingUp();
+      //     this.stopMovingDown();
+      //   }
+      //   return;
+      // } else {
+      //   console.log('Error: ' + xhr.responseText);
+      // }
 
       // if (((ball.x < this.left) && (ball.dx < 0)) ||
       //     ((ball.x > this.right) && (ball.dx > 0))) {
