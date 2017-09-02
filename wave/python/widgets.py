@@ -11,7 +11,7 @@ class Light():
         if namespace is None:
             raise Exception("Need to provide a namespace or set NAMESPACE")
 
-        self._url = namespace + "/s.light/" + name + "/i.boolean/slot/state"
+        self._uri = namespace + "/s.light/" + name + "/i.boolean/slot/state"
        
         # init light bulb 
         img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
@@ -47,13 +47,13 @@ class Light():
     
         # init WAVE client
         self._bw_client = get_client(agent=bw_agent, entity=bw_entity)
-        self._bw_client.subscribe(self._url, self._callback)
+        self._bw_client.subscribe(self._uri, self._callback)
 
     def display(self):
         display(self._box)
 
-    def url(self):
-        return self._url
+    def uri(self):
+        return self._uri
 
     def _callback(self, msg):
         # print "received: ", msg.payload
@@ -61,7 +61,6 @@ class Light():
         time_str = pacific.localize(datetime.now()).strftime("%Y-%m-%d %H:%M:%S (%Z)")
         from_name = msg.from_vk
         from_alias = self._bw_client.unresolveAlias(msg.from_vk)
-        print from_alias
         if from_alias is not None and from_alias != "":
             from_name = from_alias
         if msg.payload.lower() == "true":
@@ -90,7 +89,7 @@ class Switch():
         if namespace is None:
             raise Exception("Need to provide a namespace or set NAMESPACE")
 
-        self._url = namespace + "/s.switch/" + name + "/i.boolean/signal/state"
+        self._uri = namespace + "/s.switch/" + name + "/i.boolean/signal/state"
        
         # init switch 
         self._switch = widgets.ToggleButtons(
@@ -127,17 +126,18 @@ class Switch():
     def display(self):
         display(self._box)
 
-    def url(self):
-        return self._url
+    def uri(self):
+        return self._uri
 
     def _switch_on_click(self, change):
-        time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S (%Z)")
+        pacific = pytz.timezone('America/Los_Angeles')
+        time_str = pacific.localize(datetime.now()).strftime("%Y-%m-%d %H:%M:%S (%Z)")
         if change['new'] == "Turn On":
             self._append_text("[" + time_str + "] switch is turned on.")
-            self._switch_bw_client.publish(self._url, (64,0,0,1), "true")
+            self._switch_bw_client.publish(self._uri, (64,0,0,1), "true")
         elif change['new'] == "Turn Off":
             self._append_text("[" + time_str + "] switch is turned off.")
-            self._switch_bw_client.publish(self._url, (64,0,0,1), "false")
+            self._switch_bw_client.publish(self._uri, (64,0,0,1), "false")
     
     def _append_text(self, text):
         if self._text != "":
