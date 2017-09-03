@@ -39,7 +39,7 @@ python pong-server.py
 
 #### Play against the AI:
 
-Go to <http://localhost:3000/index.html>. You should see the Pong game. Press "1" to play against the AI. Press "Escape" to stop the game.
+Go to <http://localhost:3000>. You should see the Pong game. Press "1" to play against the AI. Press "Escape" to stop the game.
 
 
 

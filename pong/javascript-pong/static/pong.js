@@ -426,11 +426,24 @@ Pong = {
     ai: function(dt, ball) {
 
       // var features = [0.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0];
-      var features = Array.apply(null, Array(8)).map(function(item, index) {
-        return Math.random() * 2
+      // var features = Array.apply(null, Array(8)).map(function(item, index) {
+      //   return Math.random() * 2
+      // });
+
+      var features = [
+        ball.y - this.pong.leftPaddle.y, this.pong.leftPaddle.y,
+        this.pong.rightPaddle.y, ball.x, ball.y, ball.dx, ball.dy,
+        ball.x_prev,  // TODO: this should be x_prev
+        ball.y_prev   // TODO: this should be y_prev
+      ].map(function(x) {
+        return x / 500.0;
       });
 
+      // features = [for (i of features) i / 500];
+
+
       var data = JSON.stringify({'input': features});
+      // console.log(data);
       var self = this;
 
       // Query Clipper via the Pong server proxy
@@ -443,19 +456,19 @@ Pong = {
         if (response.ok) {
           response.json().then(function(data) {
             if (data.output === 0) {
-              console.log('Staying still');
+              // console.log('Staying still');
               self.stopMovingUp();
               self.stopMovingDown();
             } else if (data.output === 1) {
-              console.log('Moving down');
+              // console.log('Moving down');
               self.stopMovingUp();
               self.moveDown();
             } else if (data.output === 2) {
-              console.log('Moving up');
+              // console.log('Moving up');
               self.stopMovingDown();
               self.moveUp();
             } else {
-              console.log(data.output, 'Unrecognized action. Not moving.');
+              // console.log(data.output, 'Unrecognized action. Not moving.');
               self.stopMovingUp();
               self.stopMovingDown();
             }
@@ -569,6 +582,8 @@ Pong = {
     },
 
     setpos: function(x, y) {
+      this.x_prev = this.x == null ? x : this.x;
+      this.y_prev = this.y == null ? y : this.y;
       this.x = x;
       this.y = y;
       this.left = this.x - this.radius;

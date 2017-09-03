@@ -38,6 +38,8 @@ class PongServer(BaseHTTPRequestHandler):
 
     # GET requests serve the corresponding file from the "static/" subdirectory
     def do_GET(self):
+        if self.path is "/":
+            self.path = "/index.html"
 
         local_path = os.path.abspath(os.path.join("static", self.path.lstrip("/")))
         logger.info("local path {}".format(local_path))
@@ -63,18 +65,17 @@ class PongServer(BaseHTTPRequestHandler):
         req_json = json.loads(self.rfile.read(content_length))
         req_json["input"] = [float(i) for i in req_json["input"]]
 
-        logger.info("Request JSON: {}".format(req_json))
+        logger.debug("Request JSON: {}".format(req_json))
         headers = {'Content-Type': 'application/json'}
         start = datetime.now()
         clipper_response = requests.post(clipper_url, headers=headers, data=json.dumps(req_json))
         end = datetime.now()
         latency = (end - start).total_seconds() * 1000.0
-        logger.info("Clipper responded with '{txt}' in {time} ms".format(
+        logger.debug("Clipper responded with '{txt}' in {time} ms".format(
             txt=clipper_response.text, time=latency))
         self.send_response(clipper_response.status_code)
         # Forward headers
         for k, v in clipper_response.headers.iteritems():
-            logger.info("Adding response header [{k}, {v}]".format(k=k, v=v))
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(clipper_response.text)
