@@ -7,6 +7,7 @@ import os
 import requests
 from datetime import datetime
 import logging
+import json
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
@@ -15,20 +16,20 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-
-
 PORT = 3000
+
 
 # NOTE: This is definitely not secure
 def in_static_dir(file):
     directory = os.path.abspath("static/")
-    #make both absolute
+    # make both absolute
     directory = os.path.join(os.path.realpath(directory), '')
     file = os.path.realpath(file)
 
-    #return true, if the common prefix of both is equal to directory
-    #e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
+    # return true, if the common prefix of both is equal to directory
+    # e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
     return os.path.commonprefix([file, directory]) == directory
+
 
 class PongServer(BaseHTTPRequestHandler):
 
@@ -56,17 +57,23 @@ class PongServer(BaseHTTPRequestHandler):
     def do_POST(self):
         clipper_url = "http://localhost:1337/pong/predict"
         content_length = int(self.headers['Content-Length'])
-        req_json = self.rfile.read(content_length)
+
+        # Stupid workaround because Javascript's JSON.stringify will turn 1.0 into 1, which
+        # Clipper's JSON parsing will parse as an integer not a double
+        req_json = json.loads(self.rfile.read(content_length))
+        req_json["input"] = [float(i) for i in req_json["input"]]
+
+        logger.info("Request JSON: {}".format(req_json))
         headers = {'Content-Type': 'application/json'}
         start = datetime.now()
-        clipper_response = requests.post(clipper_url, headers=headers, data=req_json)
+        clipper_response = requests.post(clipper_url, headers=headers, data=json.dumps(req_json))
         end = datetime.now()
         latency = (end - start).total_seconds() * 1000.0
         logger.info("Clipper responded with '{txt}' in {time} ms".format(
             txt=clipper_response.text, time=latency))
         self.send_response(clipper_response.status_code)
         # Forward headers
-        for k, v in clipper_response.headers:
+        for k, v in clipper_response.headers.iteritems():
             logger.info("Adding response header [{k}, {v}]".format(k=k, v=v))
             self.send_header(k, v)
         self.end_headers()
@@ -77,11 +84,12 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-def run(port=3000):
-    server_addr = ('', port)
+def run():
+    server_addr = ('', PORT)
     logger.info("Starting Pong Server on {}".format(server_addr))
     server = ThreadingServer(server_addr, PongServer)
     server.serve_forever()
+
 
 if __name__ == '__main__':
     run()

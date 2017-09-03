@@ -428,6 +428,7 @@ Pong = {
       var features = [0.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0];
 
       var data = JSON.stringify({'input': features});
+      var self = this;
 
       fetch('http://localhost:3000/predict', {
         method: 'POST',
@@ -435,7 +436,29 @@ Pong = {
         headers: new Headers({'Content-Type': 'application/json'}),
         body: data
       }).then(function(response) {
-        console.log(response.status)
+        if (response.ok) {
+          response.json().then(function(data) {
+            if (data.output === 0) {
+              console.log('Staying still');
+              self.stopMovingUp();
+              self.stopMovingDown();
+            } else if (data.output === 1) {
+              console.log('Moving down');
+              self.stopMovingUp();
+              self.moveDown();
+            } else if (data.output === 2) {
+              console.log('Moving up');
+              self.stopMovingDown();
+              self.moveUp();
+            } else {
+              console.log(data.output, 'Unrecognized action. Not moving.');
+              self.stopMovingUp();
+              self.stopMovingDown();
+            }
+          });
+        } else {
+          console.log(response.status, response.statusText);
+        }
       });
 
 
