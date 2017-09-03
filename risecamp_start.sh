@@ -8,7 +8,7 @@
 # https://stackoverflow.com/questions/23544282/what-is-the-best-way-to-manage-permissions-for-docker-shared-volumes/28596874#28596874
 TARGET_GID=$(stat -c "%g" /var/run/docker.sock)
 
-EXISTS=$(cat /etc/group | grep $TARGET_GID | wc -l)
+EXISTS=$(cat /etc/group | cut -d: -f3 | grep "^${TARGET_GID}\$" | wc -l)
 
 # Create new group using target GID and add user
 if [ $EXISTS == "0" ]; then
