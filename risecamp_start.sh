@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [ "$HOST_DOCKER_GID" != "" ]; then
-  gpasswd -a "$NB_USER" "$HOST_DOCKER_GID"
-fi
-
 ./ground/ground_start.sh
 /opt/pywren/pywren_start.sh
 ./wave/wave_start.sh

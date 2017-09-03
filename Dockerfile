@@ -179,5 +179,8 @@ USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
 RUN rmdir /home/$NB_USER/work
 
+# kludge for macOS support
+RUN gpasswd -a $NB_USER staff
+
 WORKDIR /home/$NB_USER
 CMD cd /home/$NB_USER && /opt/risecamp_start.sh
