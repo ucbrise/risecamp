@@ -424,71 +424,59 @@ Pong = {
     },
 
     ai: function(dt, ball) {
-      // From https://stackoverflow.com/a/24468752/814642
-      this.url = 'http://localhost:1337/pong/predict';
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', this.url, false);
-      xhr.setRequestHeader('Content-type', 'application/json');
-      // xhr.onreadystatechange = function() {
-      //   if (xhr.readyState === 4 && xhr.status === 200) {
-      //   }
-      // };
 
-      // var features = [
-      //   ball.y - this.pong.leftPaddle.y, this.pong.leftPaddle.y,
-      //   this.pong.rightPaddle.y, ball.x, ball.y, ball.dx, ball.dy,
-      //   ball.x,  // TODO: this should be x_prev
-      //   ball.y   // TODO: this should be y_prev
-      // ];
+      // var features = [0.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0];
+      // var features = Array.apply(null, Array(8)).map(function(item, index) {
+      //   return Math.random() * 2
+      // });
 
-      var features = [0.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0];
+      var features = [
+        ball.y - this.pong.leftPaddle.y, this.pong.leftPaddle.y,
+        this.pong.rightPaddle.y, ball.x, ball.y, ball.dx, ball.dy,
+        ball.x_prev,  // TODO: this should be x_prev
+        ball.y_prev   // TODO: this should be y_prev
+      ].map(function(x) {
+        return x / 500.0;
+      });
+
+      // features = [for (i of features) i / 500];
+
 
       var data = JSON.stringify({'input': features});
-      xhr.send(data);
+      // console.log(data);
+      var self = this;
 
-      if (xhr.status === 200) {
-        var json = JSON.parse(xhr.responseText);
-        if (json.output === '0') {
-          this.stopMovingUp();
-          this.stopMovingDown();
-        } else if (json.output === '1') {
-          this.stopMovingUp();
-          this.moveDown();
-        } else if (json.output === '2') {
-          this.stopMovingDown();
-          this.moveUp();
+      // Query Clipper via the Pong server proxy
+      fetch('http://localhost:3000/predict', {
+        method: 'POST',
+        redirect: 'follow',
+        headers: new Headers({'Content-Type': 'application/json'}),
+        body: data
+      }).then(function(response) {
+        if (response.ok) {
+          response.json().then(function(data) {
+            if (data.output === 0) {
+              // console.log('Staying still');
+              self.stopMovingUp();
+              self.stopMovingDown();
+            } else if (data.output === 1) {
+              // console.log('Moving down');
+              self.stopMovingUp();
+              self.moveDown();
+            } else if (data.output === 2) {
+              // console.log('Moving up');
+              self.stopMovingDown();
+              self.moveUp();
+            } else {
+              // console.log(data.output, 'Unrecognized action. Not moving.');
+              self.stopMovingUp();
+              self.stopMovingDown();
+            }
+          });
         } else {
-          this.stopMovingUp();
-          this.stopMovingDown();
+          console.log(response.status, response.statusText);
         }
-        return;
-      } else {
-        console.log('Error: ' + xhr.responseText);
-      }
-
-      // if (((ball.x < this.left) && (ball.dx < 0)) ||
-      //     ((ball.x > this.right) && (ball.dx > 0))) {
-      //   this.stopMovingUp();
-      //   this.stopMovingDown();
-      //   return;
-      // }
-      //
-      // this.predict(ball, dt);
-      //
-      // if (this.prediction) {
-      //   if (this.prediction.y < (this.top + this.height/2 - 5)) {
-      //     this.stopMovingDown();
-      //     this.moveUp();
-      //   }
-      //   else if (this.prediction.y > (this.bottom - this.height/2 + 5)) {
-      //     this.stopMovingUp();
-      //     this.moveDown();
-      //   }
-      //   else {
-      //     this.stopMovingUp();
-      //     this.stopMovingDown();
-      //   }
-      // }
+      });
     },
 
     predict: function(ball, dt) {
@@ -594,6 +582,8 @@ Pong = {
     },
 
     setpos: function(x, y) {
+      this.x_prev = this.x == null ? x : this.x;
+      this.y_prev = this.y == null ? y : this.y;
       this.x = x;
       this.y = y;
       this.left = this.x - this.radius;
