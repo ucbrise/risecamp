@@ -4,7 +4,8 @@ DOCKER_FLAGS= \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
 	-e GRANT_SUDO=yes \
-	-e "PYWREN_CONFIG_STRING=$(PYWREN_CONFIG_STRING)"
+	-e "PYWREN_CONFIG_STRING=$(PYWREN_CONFIG_STRING)" \
+	-e "HOST_DOCKER_GID=$(shell getent group docker | awk -F: '{print $3}')" \
 	#
 
 .PHONY: default
