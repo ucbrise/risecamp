@@ -4,6 +4,7 @@ DOCKER_FLAGS= \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
 	-e GRANT_SUDO=yes \
+	-e "PYWREN_CONFIG_STRING=$(PYWREN_CONFIG_STRING)"
 	#
 
 .PHONY: default
