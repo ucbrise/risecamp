@@ -83,25 +83,24 @@ RUN rm test.out
 
 # install ground
 RUN apt-get install -y openjdk-8-jdk
-RUN git clone https://github.com/ground-context/ground
-# TODO: change this once you cut a new release
-RUN cd ground && sbt dist && cp modules/postgres/target/universal/ground-postgres-0.1.2-SNAPSHOT.zip /home/$NB_USER/ground/ground-0.1.2.zip
+RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
 RUN unzip ground-0.1.2.zip
-RUN mv ground-postgres-0.1.2-SNAPSHOT ground-0.1.2
 RUN rm ground-0.1.2.zip
 RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
-RUN service postgresql start && cd ground/resources/scripts/postgres && python2.7 postgres_setup.py ground ground
+RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
 
 # miscellaneous installs
 RUN apt-get install -y python3-pip python-pip
 RUN pip3 install pandas numpy requests
-RUN pip install psycopg2 requests numpy
-
+RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLParser
+RUN pip2 install -U scikit-learn
 
 # copy new files in
-RUN mkdir -p /home/$NB_USER/ground/
-COPY ground/*.py ground/config.ini ground/*.sh ground/Ground.ipynb ground/ml ./
+COPY ground/aboveground ground/ml ground/images risecamp/
+COPY ground/*.sh ground/*.ipynb ./
 RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
+# FIXME: is this needed?
+RUN chmod +x ground-0.1.2/bin/ground-postgres
 
 
 #### ray

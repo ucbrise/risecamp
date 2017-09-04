@@ -6,7 +6,6 @@ DOCKER_RUN_FLAGS = \
 	-v /tmp:/tmp \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
-	-e GRANT_SUDO=yes \
 	-e "PYWREN_CONFIG_STRING=$(PYWREN_CONFIG_STRING)" \
 	#
 
