@@ -1,6 +1,6 @@
 import boto3
 
-rise_camp_bucket = "ampcamp-data"
+wikipedia_bucket = "ampcamp-data"
 
 def check_result_1(result):
     if result:
@@ -99,7 +99,7 @@ def plot_pywren_execution(futures):
     visualize_execution(info)
 
 
-def pywren_read_data(bucket, key):
+def read_from_s3(bucket, key):
     s3client = boto3.client("s3")
     r = s3client.get_object(Bucket=bucket, Key=key)
     return r['Body'].read().decode()
