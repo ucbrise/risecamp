@@ -65,6 +65,7 @@ USER $NB_USER
 RUN mkdir /home/$NB_USER/risecamp/
 COPY aboveground /home/$NB_USER/risecamp/aboveground
 COPY ml/ /home/$NB_USER/risecamp/ml/
+COPY images/ /home/$NB_USER/risecamp/images
 COPY *.sh /home/$NB_USER/
 COPY *.ipynb /home/$NB_USER/risecamp/
 
