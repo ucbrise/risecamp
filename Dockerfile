@@ -68,40 +68,40 @@ COPY clipper/clipper_exercises.ipynb \
 
 
 #### ground
-#USER root
-#
-#RUN mkdir -p /home/$NB_USER/ground
-#WORKDIR /home/$NB_USER/ground
-#
-#RUN conda install -y GitPython
-#
-## install and set up postgres
-#RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
-#RUN sed 's/md5/trust/g' test.out > test2.out
-#RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
-#RUN rm test.out
-#
-## install ground
-#RUN apt-get install -y openjdk-8-jdk
-#RUN git clone https://github.com/ground-context/ground
-## TODO: change this once you cut a new release
-#RUN cd ground && sbt dist && cp modules/postgres/target/universal/ground-postgres-0.1.2-SNAPSHOT.zip /home/$NB_USER/ground/ground-0.1.2.zip
-#RUN unzip ground-0.1.2.zip
-#RUN mv ground-postgres-0.1.2-SNAPSHOT ground-0.1.2
-#RUN rm ground-0.1.2.zip
-#RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
-#RUN service postgresql start && cd ground/resources/scripts/postgres && python2.7 postgres_setup.py ground ground
-#
-## miscellaneous installs
-#RUN apt-get install -y python3-pip python-pip
-#RUN pip3 install pandas numpy requests
-#RUN pip install psycopg2 requests numpy
-#
-#
-## copy new files in
-#RUN mkdir -p /home/$NB_USER/ground/
-#COPY ground/*.py ground/config.ini ground/*.sh ground/Ground.ipynb ground/ml ./
-#RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
+USER root
+
+RUN mkdir -p /home/$NB_USER/ground
+WORKDIR /home/$NB_USER/ground
+
+RUN conda install -y GitPython
+
+# install and set up postgres
+RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
+RUN sed 's/md5/trust/g' test.out > test2.out
+RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
+RUN rm test.out
+
+# install ground
+RUN apt-get install -y openjdk-8-jdk
+RUN git clone https://github.com/ground-context/ground
+# TODO: change this once you cut a new release
+RUN cd ground && sbt dist && cp modules/postgres/target/universal/ground-postgres-0.1.2-SNAPSHOT.zip /home/$NB_USER/ground/ground-0.1.2.zip
+RUN unzip ground-0.1.2.zip
+RUN mv ground-postgres-0.1.2-SNAPSHOT ground-0.1.2
+RUN rm ground-0.1.2.zip
+RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
+RUN service postgresql start && cd ground/resources/scripts/postgres && python2.7 postgres_setup.py ground ground
+
+# miscellaneous installs
+RUN apt-get install -y python3-pip python-pip
+RUN pip3 install pandas numpy requests
+RUN pip install psycopg2 requests numpy
+
+
+# copy new files in
+RUN mkdir -p /home/$NB_USER/ground/
+COPY ground/*.py ground/config.ini ground/*.sh ground/Ground.ipynb ground/ml ./
+RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
 
 
 #### ray
