@@ -91,7 +91,7 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
 
 def run(clipper_addr):
     server_addr = ('', PORT)
-    logger.info("Starting Pong Server on {}".format(server_addr))
+    logger.info("Starting Pong Server on <EC2 Instance Hostname>:{port}".format(port=PORT))
     server = ThreadingServer(server_addr, PongServer)
     server.clipper_addr = clipper_addr
     server.serve_forever()

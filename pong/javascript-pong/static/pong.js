@@ -14,7 +14,7 @@ Pong = {
     paddleSpeed: 2,  // should be able to cross court vertically   in 2 seconds
     ballSpeed: 4,    // should be able to cross court horizontally in 4 seconds,
                      // at starting speed ...
-    ballAccel: 8,    // ... but accelerate as time passes
+    ballAccel: 0,    // ... but accelerate as time passes
     ballRadius: 5,
     sound: true
   },
@@ -85,8 +85,8 @@ Pong = {
     if (!this.playing) {
       this.scores = [0, 0];
       this.playing = true;
-      this.leftPaddle.setAuto(numPlayers < 1, this.level(0));
-      this.rightPaddle.setAuto(numPlayers < 2, this.level(1));
+      this.leftPaddle.setAuto(numPlayers < 2, this.level(0));
+      this.rightPaddle.setAuto(false, this.level(1));
       this.ball.reset();
       this.runner.hideCursor();
     }
@@ -153,9 +153,6 @@ Pong = {
 
   onkeydown: function(keyCode) {
     switch (keyCode) {
-      case Game.KEY.ZERO:
-        this.startDemo();
-        break;
       case Game.KEY.ONE:
         this.startSinglePlayer();
         break;
