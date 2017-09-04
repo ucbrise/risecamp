@@ -430,12 +430,10 @@ Pong = {
       //   return Math.random() * 2
       // });
 
-      var features = [
-        ball.y - this.pong.leftPaddle.y, this.pong.leftPaddle.y,
-        this.pong.rightPaddle.y, ball.x, ball.y, ball.dx, ball.dy,
-        ball.x_prev,  // TODO: this should be x_prev
-        ball.y_prev   // TODO: this should be y_prev
-      ].map(function(x) {
+      var features = [this.pong.leftPaddle.y, this.pong.rightPaddle.y,
+                      ball.x, ball.y,
+                      ball.dx, ball.dy,
+                      ball.x_prev, ball.y_prev].map(function(x) {
         return x / 500.0;
       });
 
@@ -448,7 +446,7 @@ Pong = {
 
       var predict_url = `${window.location.href}/predict`;
       // Query Clipper via the Pong server proxy
-      fetch(url, {
+      fetch(predict_url, {
         method: 'POST',
         redirect: 'follow',
         headers: new Headers({'Content-Type': 'application/json'}),

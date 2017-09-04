@@ -60,7 +60,8 @@ class PongServer(BaseHTTPRequestHandler):
                 return
 
     def do_POST(self):
-        clipper_url = "http://localhost:1337/pong/predict"
+
+        clipper_url = "http://{}/pong/predict".format(self.server.clipper_addr)
         content_length = int(self.headers['Content-Length'])
 
         # Stupid workaround because Javascript's JSON.stringify will turn 1.0 into 1, which
@@ -88,13 +89,14 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-def run():
+def run(clipper_addr):
     server_addr = ('', PORT)
     logger.info("Starting Pong Server on {}".format(server_addr))
     server = ThreadingServer(server_addr, PongServer)
+    server.clipper_addr = clipper_addr
     server.serve_forever()
 
 
 if __name__ == '__main__':
-    docker_ip = sys.argv[1]
-    run()
+    clipper_addr = sys.argv[1]
+    run(clipper_addr)
