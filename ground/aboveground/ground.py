@@ -77,8 +77,18 @@ class GroundClient:
 
         return r.json()
 
+    def get_le_version(self, lev_id):
+        r = requests.get(self.address + '/versions/lineage_edges/' + str(lev_id))
+
+        return r.json()
+
     def get_lineage_edge_latest(self, le_key):
         r = requests.get(self.address + '/lineage_edges/' + le_key + '/latest')
+
+        return r.json()
+
+    def get_node_adj_le(self, nv_id):
+        r = requests.get(self.address + '/versions/nodes/adjacent/lineage/' + str(nv_id))
 
         return r.json()
 
