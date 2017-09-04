@@ -131,10 +131,12 @@ RUN mkdir -p /home/$NB_USER/pywren
 RUN mkdir -p /opt/pywren
 COPY pywren/config_encoder.py /opt/pywren/
 COPY pywren/training.py /opt/pywren/
+COPY pywren/matrix.py /opt/pywren/
 COPY pywren/pywren_start.sh /opt/pywren/
 RUN chown $NB_USER /opt/pywren
 RUN chmod a+x /opt/pywren/config_encoder.py
 RUN chmod a+x /opt/pywren/training.py
+RUN chmod a+x /opt/pywren/matrix.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
