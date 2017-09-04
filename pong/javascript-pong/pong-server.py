@@ -8,6 +8,10 @@ import requests
 from datetime import datetime
 import logging
 import json
+import sys
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(cur_dir, "static")
+
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
@@ -21,9 +25,8 @@ PORT = 3000
 
 # NOTE: This is definitely not secure
 def in_static_dir(file):
-    directory = os.path.abspath("static/")
     # make both absolute
-    directory = os.path.join(os.path.realpath(directory), '')
+    directory = os.path.join(os.path.realpath(static_dir), '')
     file = os.path.realpath(file)
 
     # return true, if the common prefix of both is equal to directory
@@ -41,7 +44,7 @@ class PongServer(BaseHTTPRequestHandler):
         if self.path is "/":
             self.path = "/index.html"
 
-        local_path = os.path.abspath(os.path.join("static", self.path.lstrip("/")))
+        local_path = os.path.abspath(os.path.join(static_dir, self.path.lstrip("/")))
         logger.info("local path {}".format(local_path))
         if not in_static_dir(local_path):
             self.send_error(403, "Forbidden")
@@ -57,7 +60,8 @@ class PongServer(BaseHTTPRequestHandler):
                 return
 
     def do_POST(self):
-        clipper_url = "http://localhost:1337/pong/predict"
+
+        clipper_url = "http://{}/pong/predict".format(self.server.clipper_addr)
         content_length = int(self.headers['Content-Length'])
 
         # Stupid workaround because Javascript's JSON.stringify will turn 1.0 into 1, which
@@ -85,12 +89,14 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-def run():
+def run(clipper_addr):
     server_addr = ('', PORT)
-    logger.info("Starting Pong Server on {}".format(server_addr))
+    logger.info("Starting Pong Server on <EC2 Instance Hostname>:{port}".format(port=PORT))
     server = ThreadingServer(server_addr, PongServer)
+    server.clipper_addr = clipper_addr
     server.serve_forever()
 
 
 if __name__ == '__main__':
-    run()
+    clipper_addr = sys.argv[1]
+    run(clipper_addr)
