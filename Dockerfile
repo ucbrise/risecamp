@@ -105,15 +105,22 @@ COPY clipper/clipper_exercises.ipynb \
 
 
 #### ray
+USER root
+RUN sudo mkdir /tmp1
+RUN sudo chmod 777 /tmp1
+
 USER $NB_USER
 
-RUN pip install ray==0.2.0 && \
-    pip install tensorflow==1.3.0 && \
+RUN pip install tensorflow==1.3.0 && \
     pip install gym==0.9.2 && \
     pip install smart_open && \
     pip install opencv-python && \
     pip install scipy
 
+RUN pip install git+https://github.com/robertnishihara/ray.git@branchforrisecamp#subdirectory=python
+
+RUN git clone https://github.com/catapult-project/catapult.git /tmp1/ray/catapult
+RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
 
 RUN mkdir -p /home/$NB_USER/ray
 COPY ray/ray-test.ipynb /home/$NB_USER/ray/
