@@ -180,4 +180,7 @@ RUN chown -R $NB_USER:users /home/$NB_USER
 RUN rmdir /home/$NB_USER/work
 
 WORKDIR /home/$NB_USER
+USER $NB_USER
+RUN pip install jupyterhub==0.8.0b4
+USER root
 CMD cd /home/$NB_USER && /opt/risecamp_start.sh
