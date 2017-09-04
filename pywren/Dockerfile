@@ -16,7 +16,7 @@ COPY *.ipynb /home/$NB_USER/
 RUN mkdir /home/$NB_USER/solution
 COPY solution/*.ipynb /home/$NB_USER/solution/
 RUN pip install pywren
-ENV PYWREN_LOGLEVEL INFO
+ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 CMD cd /opt/pywren/ && bash pywren_start.sh && cd /home/$NB_USER && start-notebook.sh
