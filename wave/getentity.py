@@ -13,12 +13,12 @@ lightEntity = base64.b64decode(msg["lightEntity"])
 switchEntity = base64.b64decode(msg["switchEntity"])
 namespaceEntity = base64.b64decode(msg["namespaceEntity"])
 user = os.environ["NB_USER"]
-with open('/home/{0}/light.ent'.format(user),'wb') as f:
+with open('/home/{0}/wave/light.ent'.format(user),'wb') as f:
     print 'Saved light entity to light.ent'
     f.write(lightEntity)
-with open('/home/{0}/switch.ent'.format(user),'wb') as f:
+with open('/home/{0}/wave/switch.ent'.format(user),'wb') as f:
     print 'Saved switch entity to switch.ent'
     f.write(switchEntity)
-with open('/home/{0}/ns.ent'.format(user),'wb') as f:
+with open('/home/{0}/wave/ns.ent'.format(user),'wb') as f:
     print 'Saved namespace entity to ns.ent'
     f.write(namespaceEntity)

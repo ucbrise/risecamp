@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y \
   python2.7 postgresql git tmux apt-transport-https ca-certificates curl software-properties-common \
   libzmq5 daemon python-pip graphviz
 RUN pip2 install --upgrade pip
+RUN python2 -m pip install ipython==5.4 ipykernel
+RUN python2 -m ipykernel install --user
+RUN pip2 install numpy pyzmq subprocess32 pandas matplotlib seaborn \
+      tensorflow msgpack-python requests pytz ipywidgets
 
 # add docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
@@ -27,10 +31,7 @@ RUN apt-get install -y sbt
 
 
 #### clipper
-USER $NB_USER
-
-RUN conda create -n py2 python=2 jupyter
-RUN /bin/bash -c "source activate py2 && ipython kernel install --user"
+USER root
 
 RUN mkdir -p /home/$NB_USER/clipper
 WORKDIR /home/$NB_USER/clipper
@@ -39,17 +40,12 @@ COPY clipper/img/ img/
 COPY clipper/tf_cifar_model/ tf_cifar_model/
 
 ENV DATA cifar/
-
 RUN mkdir -p $DATA \
-      && /bin/bash -c "source activate py2 && conda install -y -q numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow"
+      && python2 ./setup/download_cifar.py $DATA \
+      && python2 ./setup/extract_cifar.py $DATA 10000 10000
 
-RUN /bin/bash -c "source activate py2 && python ./setup/download_cifar.py $DATA \
-      && python ./setup/extract_cifar.py $DATA 10000 10000"
-
-
-RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --single-branch \
-      && /bin/bash -c "source activate py2 && pip install -e ./clipper/clipper_admin_v2"
-
+RUN git clone https://github.com/ucbrise/clipper.git --branch risecamp-2017 --single-branch
+RUN pip2 install -e ./clipper/clipper_admin_v2
 
 COPY \
   clipper/clipper_exercises.ipynb \
@@ -57,9 +53,6 @@ COPY \
   clipper/__init__.py \
   clipper/cifar_utils.py \
   ./
-
-USER root
-RUN chown jovyan:users -R /home/$NB_USER/clipper
 
 
 #### ground
@@ -97,9 +90,13 @@ RUN chmod +x /home/$NB_USER/ground/ground_start.sh
 #### ray
 USER $NB_USER
 
-RUN pip install ray && \
+RUN pip install ray==0.2.0 && \
     pip install tensorflow==1.3.0 && \
-    pip install gym==0.9.2
+    pip install gym==0.9.2 && \
+    pip install smart_open && \
+    pip install opencv-python && \
+    pip install scipy
+
 
 RUN mkdir -p /home/$NB_USER/ray
 COPY ray/ray-test.ipynb /home/$NB_USER/ray/
@@ -108,14 +105,13 @@ COPY ray/tutorial /home/$NB_USER/ray/
 
 #### wave
 USER root
-RUN pip2 install msgpack-python requests pytz ipywidgets
-RUN jupyter nbextension enable --py  --sys-prefix widgetsnbextension
+RUN conda install -y ipywidgets
+RUN python2 -m jupyter nbextension enable --py  --sys-prefix widgetsnbextension
 RUN mkdir -p /home/$NB_USER/.ipynb_checkpoints /home/$NB_USER/wave
 COPY wave/getentity.py /usr/local/bin/
-COPY wave/getaccess /home/$NB_USER
-# FIXME: rename to start-wave.sh?
-COPY wave/start.sh /usr/local/bin/
+COPY wave/getaccess /home/$NB_USER/wave
 COPY wave/ragent /bin/
+COPY wave/wave_start.sh /home/$NB_USER/wave
 RUN chmod 0755 /bin/ragent
 COPY wave/bw2 /bin/
 COPY wave/bw2lint /bin/
@@ -127,19 +123,31 @@ ADD wave/images /home/$NB_USER/wave/images
 ADD wave/python /home/$NB_USER/wave
 ENV PYTHONPATH /home/$NB_USER/wave/python
 RUN rm -f /home/$NB_USER/.bw2bind.log
-RUN chown -R $NB_USER:users /home/$NB_USER/wave
 
 
 #### pywren
-USER $NB_USER
+USER root
 RUN mkdir -p /home/$NB_USER/pywren
-COPY pywren/pywren-risecamp.ipynb /home/$NB_USER/pywren
+RUN mkdir -p /opt/pywren
+COPY pywren/config_encoder.py /opt/pywren/
+COPY pywren/training.py /opt/pywren/
+COPY pywren/pywren_start.sh /opt/pywren/
+RUN chown $NB_USER /opt/pywren
+RUN chmod a+x /opt/pywren/config_encoder.py
+RUN chmod a+x /opt/pywren/training.py
+RUN chmod a+x /opt/pywren/pywren_start.sh
+
+USER $NB_USER
+COPY pywren/*.ipynb /home/$NB_USER/pywren/
+RUN cd /opt/pywren && git clone https://github.com/pywren/pywren.git && pip install -e pywren/
+ENV PYWREN_LOGLEVEL ERROR
+ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 
 #### finalize
 COPY ./risecamp_start.sh /opt
+COPY ./.jupyter /home/$NB_USER/.jupyter
 CMD cd /home/$NB_USER && /opt/risecamp_start.sh
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
-RUN pip install jupyterhub==0.8.0.b3

@@ -35,14 +35,29 @@ RUN rm test.out
 # install git
 RUN apt-get install -y git
 RUN git clone https://github.com/ground-context/ground
-RUN wget https://github.com/ground-context/ground/releases/download/v0.1.1/ground-0.1.1.zip
-RUN unzip ground-0.1.1.zip
-RUN rm ground-0.1.1.zip
-RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres
+# TODO: change this once you cut a new release
+RUN cd ground && sbt dist && cp modules/postgres/target/universal/ground-postgres-0.1.2-SNAPSHOT.zip /home/$NB_USER/ground-0.1.2.zip
+RUN unzip ground-0.1.2.zip
+RUN mv ground-postgres-0.1.2-SNAPSHOT ground-0.1.2
+RUN rm ground-0.1.2.zip
+RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
 RUN service postgresql start && cd ground/resources/scripts/postgres && python2.7 postgres_setup.py ground ground 
 
 # install tmux
 RUN apt-get install -y tmux
+
+# miscellaneous installs
+RUN apt-get install -y python3-pip
+RUN pip3 install pandas
+RUN pip3 install numpy
+RUN pip3 install requests
+RUN pip3 install numpy
+RUN apt-get install -y python-pip
+RUN pip install psycopg2
+RUN pip install requests
+RUN pip install numpy
+
+USER $NB_USER
 
 # copy new files in
 RUN mkdir /home/$NB_USER/risecamp/
@@ -50,7 +65,12 @@ COPY *.py /home/$NB_USER/risecamp/
 COPY config.ini /home/$NB_USER/risecamp/
 COPY *.sh /home/$NB_USER/
 COPY Ground.ipynb /home/$NB_USER/risecamp/
+COPY ml/ /home/$NB_USER/risecamp/ml/
 
+
+RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
+
+USER root
 RUN chmod +x /home/$NB_USER/ground_start.sh
 
 CMD cd /home/$NB_USER && ./ground_start.sh

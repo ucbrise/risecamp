@@ -72,7 +72,7 @@ def add_repo(repo_name):
     # create URLS for API interaction
     gitUrl = "https://github.com/" + repo_name
 
-    repo = git.Repo.init('/tmp/' + repo_name, bare=True)
+    repo = git.Repo.init('/tmp/repo', bare=True)
     origin = repo.create_remote('origin', url=gitUrl)
 
     class MyProgressPrinter(git.RemoteProgress):
@@ -86,9 +86,9 @@ def add_repo(repo_name):
         print("Updated %s to %s" % (fetch_info.ref, fetch_info.commit))
     print('commits fetched!')
 
-    g = git.Git('/tmp/' + repo_name)
-    node_id = gc.create_node(repo_name, repo_name)['id']
-    print(node_id)
+    g = git.Git('/tmp/repo')
+    ground_repo_name = repo_name.split('/')[-1]
+    node_id = gc.create_node(ground_repo_name, ground_repo_name)['id']
 
     repo_commits = get_commits(g, {})  # Get a list of the latest commits
     post_commits(repo_commits, {}, repo_name, node_id)
