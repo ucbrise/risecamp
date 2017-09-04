@@ -1,8 +1,8 @@
 #!/bin/bash
 
-./ground/ground_start.sh
-/opt/pywren/pywren_start.sh
-./wave/wave_start.sh
+# ./ground/ground_start.sh
+# /opt/pywren/pywren_start.sh
+# ./wave/wave_start.sh
 
 # an enchaned kludge to ensure clipper successfully call docker.sock
 # https://stackoverflow.com/questions/23544282/what-is-the-best-way-to-manage-permissions-for-docker-shared-volumes/28596874#28596874
