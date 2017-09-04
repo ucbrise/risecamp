@@ -446,8 +446,10 @@ Pong = {
       // console.log(data);
       var self = this;
 
+      var clipper_ip = "localhost:3000";
+      var url = `http://${clipper_ip}/predict`;
       // Query Clipper via the Pong server proxy
-      fetch('http://localhost:3000/predict', {
+      fetch(url, {
         method: 'POST',
         redirect: 'follow',
         headers: new Headers({'Content-Type': 'application/json'}),
