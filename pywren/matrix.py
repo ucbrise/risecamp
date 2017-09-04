@@ -6,6 +6,7 @@ import io
 import numpy as np
 import time
 
+
 def list_all_keys(bucket, prefix):
     client = boto3.client('s3')
     objects = client.list_objects(Bucket=bucket, Prefix=prefix, Delimiter=prefix)
@@ -33,15 +34,16 @@ def block_key_to_block(key):
 
 class ShardedMatrix(object):
     def __init__(self, key,
+                 shard_sizes,
                  shape=None,
-                 shard_size_0=None,
-                 shard_size_1=None,
                  bucket=None,
                  prefix='pywren.linalg/'):
         self.bucket = bucket
         self.prefix = prefix
         self.key = key
         self.key_base = prefix + self.key + "/"
+        shard_size_0 = shard_sizes[0]
+        shard_size_1 = shard_sizes[1]
         header = self.__read_header__()
         self.replication_factor = 1
 
@@ -256,7 +258,6 @@ class ShardedMatrix(object):
             executor = fs.ThreadPoolExecutor(n_jobs)
 
         futures = []
-        print(blocks)
         for ((bidx_0, bidx_1),(block_0, block_1)) in zip(bidxs, blocks):
             bstart_0, bend_0 = block_0
             bstart_1, bend_1 = block_1
