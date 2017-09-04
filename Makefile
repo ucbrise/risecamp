@@ -1,5 +1,6 @@
 DOCKER_FLAGS= \
 	--rm -p 0.0.0.0:8888:8888 \
+	-p 3000:3000 \
 	-v /tmp:/tmp \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
