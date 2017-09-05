@@ -96,8 +96,12 @@ RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLPar
 RUN pip2 install -U scikit-learn
 
 # copy new files in
-COPY ground/aboveground ground/ml ground/images risecamp/
-COPY ground/*.sh ground/*.ipynb ./
+COPY ground/aboveground /home/$NB_USER/ground/risecamp/aboveground
+COPY ground/ml/ /home/$NB_USER/ground/risecamp/ml/
+COPY ground/images/ /home/$NB_USER/ground/risecamp/images
+COPY ground/*.sh /home/$NB_USER/ground/
+COPY ground/*.ipynb /home/$NB_USER/ground/risecamp/
+
 RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
 # FIXME: is this needed?
 RUN chmod +x ground-0.1.2/bin/ground-postgres
