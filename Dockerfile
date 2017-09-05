@@ -155,16 +155,18 @@ RUN mkdir -p /home/$NB_USER/pywren
 RUN mkdir -p /opt/pywren
 COPY pywren/config_encoder.py /opt/pywren/
 COPY pywren/training.py /opt/pywren/
+COPY pywren/matrix.py /opt/pywren/
 COPY pywren/pywren_start.sh /opt/pywren/
 RUN chown $NB_USER /opt/pywren
 RUN chmod a+x /opt/pywren/config_encoder.py
 RUN chmod a+x /opt/pywren/training.py
+RUN chmod a+x /opt/pywren/matrix.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
 COPY pywren/*.ipynb /home/$NB_USER/pywren/
-RUN pip install pywren
-ENV PYWREN_LOGLEVEL INFO
+RUN cd /opt/pywren && git clone https://github.com/pywren/pywren.git && pip install -e pywren/
+ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 
