@@ -1,11 +1,7 @@
 DOCKER_TAG ?= risecamp2017
 
-NOTEBOOK_AUTH_TOKEN = $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
-
-NOTEBOOK_FLAGS = \
-	--NotebookApp.token="$(NOTEBOOK_AUTH_TOKEN)" \
-	--NotebookApp.base_url="/" \
-	#
+NOTEBOOK_BASE_URL ?= /
+NOTEBOOK_AUTH_TOKEN ?= $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
 
 DOCKER_RUN_FLAGS = \
 	--rm -p 0.0.0.0:8888:8888 \
@@ -14,7 +10,8 @@ DOCKER_RUN_FLAGS = \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
 	--env-file ./pywren-config.env \
-	-e "NOTEBOOK_FLAGS=\"$(NOTEBOOK_FLAGS)\"" \
+	-e "NOTEBOOK_AUTH_TOKEN=$(NOTEBOOK_AUTH_TOKEN)" \
+	-e "NOTEBOOK_BASE_URL=$(NOTEBOOK_BASE_URL)" \
 	#
 
 DOCKER_BUILD_FLAGS = \
