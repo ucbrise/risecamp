@@ -186,6 +186,7 @@ RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 #### finalize
 COPY ./risecamp_start.sh /opt
+COPY ./.jupyter /home/$NB_USER/.jupyter
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
