@@ -151,7 +151,6 @@ RUN rm -f /home/$NB_USER/.bw2bind.log
 
 #### pywren
 USER root
-RUN mkdir -p /home/$NB_USER/pywren
 RUN mkdir -p /opt/pywren
 COPY pywren/config_encoder.py /opt/pywren/
 COPY pywren/training.py /opt/pywren/
@@ -164,8 +163,9 @@ RUN chmod a+x /opt/pywren/matrix.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
+RUN mkdir -p /home/$NB_USER/pywren
 COPY pywren/*.ipynb /home/$NB_USER/pywren/
-RUN mkdir /home/$NB_USER/pywren/solution
+RUN mkdir -p /home/$NB_USER/pywren/solution
 COPY pywren/training.py /home/$NB_USER/pywren/
 COPY pywren/matrix.py /home/$NB_USER/pywren/
 COPY pywren/solution/*.ipynb /home/$NB_USER/pywren/solution/
