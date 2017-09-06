@@ -9,9 +9,9 @@ DOCKER_RUN_FLAGS = \
 	-v /tmp:/tmp \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
-	--env-file ./pywren-config.env \
 	-e "NOTEBOOK_AUTH_TOKEN=$(NOTEBOOK_AUTH_TOKEN)" \
 	-e "NOTEBOOK_BASE_URL=$(NOTEBOOK_BASE_URL)" \
+	# --env-file ./pywren-config.env \
 	#
 
 DOCKER_BUILD_FLAGS = \
