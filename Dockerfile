@@ -67,46 +67,6 @@ COPY clipper/clipper_exercises.ipynb \
       ./
 
 
-#### ground
-USER root
-
-RUN mkdir -p /home/$NB_USER/ground
-WORKDIR /home/$NB_USER/ground
-
-RUN conda install -y GitPython
-
-# install and set up postgres
-RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
-RUN sed 's/md5/trust/g' test.out > test2.out
-RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
-RUN rm test.out
-
-# install ground
-RUN apt-get install -y openjdk-8-jdk
-RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
-RUN unzip ground-0.1.2.zip
-RUN rm ground-0.1.2.zip
-RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
-RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
-
-# miscellaneous installs
-RUN apt-get install -y python3-pip python-pip
-RUN pip3 install pandas numpy requests
-RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLParser
-RUN pip2 install -U scikit-learn
-
-# copy new files in
-COPY ground/aboveground /home/$NB_USER/ground/risecamp/aboveground
-COPY ground/ml/ /home/$NB_USER/ground/risecamp/ml/
-COPY ground/images/ /home/$NB_USER/ground/risecamp/images
-COPY ground/*.sh /home/$NB_USER/ground/
-COPY ground/*.ipynb /home/$NB_USER/ground/risecamp/
-
-RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
-# FIXME: is this needed?
-RUN chmod +x ground-0.1.2/bin/ground-postgres
-
-
 #### ray
 USER root
 RUN sudo mkdir /tmp1
@@ -128,6 +88,16 @@ RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
 RUN mkdir -p /home/$NB_USER/ray
 COPY ray/ray-test.ipynb /home/$NB_USER/ray/
 COPY ray/tutorial /home/$NB_USER/ray/
+
+
+#### pong
+USER $NB_USER
+RUN mkdir -p /home/$NB_USER/pong
+WORKDIR /home/$NB_USER/pong
+COPY pong/rl_exercise06.ipynb pong/start_webserver.sh pong/get_docker_ip.sh ./
+COPY pong/pong_py_no_git/ ./pong_py_no_git
+COPY pong/javascript-pong/ ./javascript-pong
+RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 
 #### wave
@@ -174,14 +144,43 @@ ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 
-#### pong
-USER $NB_USER
-RUN mkdir -p /home/$NB_USER/pong
-WORKDIR /home/$NB_USER/pong
-COPY pong/rl_exercise06.ipynb pong/start_webserver.sh pong/get_docker_ip.sh ./
-COPY pong/pong_py_no_git/ ./pong_py_no_git
-COPY pong/javascript-pong/ ./javascript-pong
-RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
+#### ground
+USER root
+
+RUN mkdir -p /home/$NB_USER/ground
+WORKDIR /home/$NB_USER/ground
+
+RUN conda install -y GitPython
+
+# install and set up postgres
+RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
+RUN sed 's/md5/trust/g' test.out > test2.out
+RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
+RUN rm test.out
+
+# install ground
+RUN apt-get install -y openjdk-8-jdk
+RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
+RUN unzip ground-0.1.2.zip
+RUN rm ground-0.1.2.zip
+RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
+RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
+
+# miscellaneous installs
+RUN apt-get install -y python3-pip python-pip
+RUN pip3 install pandas numpy requests
+RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLParser
+RUN pip2 install -U scikit-learn
+
+# copy new files in
+COPY ground/aboveground /home/$NB_USER/ground/risecamp/aboveground
+COPY ground/ml/ /home/$NB_USER/ground/risecamp/ml/
+COPY ground/images/ /home/$NB_USER/ground/risecamp/images
+COPY ground/*.sh /home/$NB_USER/ground/
+COPY ground/*.ipynb /home/$NB_USER/ground/risecamp/
+
+RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
+RUN chmod +x ground-0.1.2/bin/ground-postgres
 
 
 #### finalize
