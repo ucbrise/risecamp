@@ -1,6 +1,8 @@
 import boto3
 
 def plot_pywren_execution(futures):
+    import warnings
+    warnings.filterwarnings("ignore")
     from IPython import get_ipython
     get_ipython().run_line_magic('pylab', 'inline')
     import pylab
