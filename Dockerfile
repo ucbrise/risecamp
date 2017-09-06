@@ -165,6 +165,8 @@ RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
 COPY pywren/*.ipynb /home/$NB_USER/pywren/
+RUN mkdir /home/$NB_USER/solution
+COPY solution/*.ipynb /home/$NB_USER/solution/
 RUN cd /opt/pywren && git clone https://github.com/pywren/pywren.git && pip install -e pywren/
 ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
