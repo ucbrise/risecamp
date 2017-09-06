@@ -171,7 +171,13 @@ Pong = {
       case Game.KEY.P:
         if (!this.rightPaddle.auto) this.rightPaddle.moveUp();
         break;
+      case Game.KEY.UP:
+        if (!this.rightPaddle.auto) this.rightPaddle.moveUp();
+        break;
       case Game.KEY.L:
+        if (!this.rightPaddle.auto) this.rightPaddle.moveDown();
+        break;
+      case Game.KEY.DOWN:
         if (!this.rightPaddle.auto) this.rightPaddle.moveDown();
         break;
     }
@@ -188,7 +194,13 @@ Pong = {
       case Game.KEY.P:
         if (!this.rightPaddle.auto) this.rightPaddle.stopMovingUp();
         break;
+      case Game.KEY.UP:
+        if (!this.rightPaddle.auto) this.rightPaddle.stopMovingUp();
+        break;
       case Game.KEY.L:
+        if (!this.rightPaddle.auto) this.rightPaddle.stopMovingDown();
+        break;
+      case Game.KEY.DOWN:
         if (!this.rightPaddle.auto) this.rightPaddle.stopMovingDown();
         break;
     }

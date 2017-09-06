@@ -50,6 +50,7 @@ ENV DATA cifar/
 RUN mkdir -p cifar/ \
       && /bin/bash -c "source activate clipper_py2 && \
         conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn && \
+        conda install -c conda-forge jupyter_contrib_nbextensions && \
         pip install ray==0.2.0 tensorflow==1.3.0 gym==0.9.2 smart_open"
 
 RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py cifar/ && \
