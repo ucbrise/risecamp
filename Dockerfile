@@ -185,7 +185,7 @@ RUN chmod +x ground-0.1.2/bin/ground-postgres
 
 #### finalize
 COPY ./risecamp_start.sh /opt
-COPY ./.jupyter /home/$NB_USER/.jupyter
+#COPY ./.jupyter /home/$NB_USER/.jupyter
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
