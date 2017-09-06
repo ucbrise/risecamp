@@ -62,5 +62,5 @@ class Ball():
         self.set_direction(pos.dx, pos.dy)
 
     def reset(self, playerNo):
-        self.set_position(self.maxX if playerNo == 1 else self.minX, random.uniform(self.minY, self.maxY));
-        self.set_direction(-self.speed if playerNo == 1 else self.speed, self.speed);
+        self.set_position((self.maxX + self.minX) / 2, random.uniform(self.minY, self.maxY))
+        self.set_direction(self.speed if playerNo == 1 else -self.speed, self.speed)
