@@ -11,7 +11,7 @@ class PongJSEnv(gym.Env):
     def __init__(self):
         self.env = PongJS()
         self.action_space = gym.spaces.Discrete(3)
-        self.observation_space = gym.spaces.box.Box(low=0, high=1, shape=(7,))
+        self.observation_space = gym.spaces.box.Box(low=0, high=1, shape=(8,))
 
     @property
     def right_pad(self):
