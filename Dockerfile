@@ -50,8 +50,8 @@ ENV DATA cifar/
 RUN mkdir -p cifar/ \
       && /bin/bash -c "source activate clipper_py2 && \
         conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn && \
-        pip install tensorflow==1.3.0 gym==0.9.2 smart_open"
-RUN pip install git+https://github.com/robertnishihara/ray.git@87695eb3466cabfe2aa81ef49a9c8dbe392e79e0#subdirectory=python
+        pip install tensorflow==1.3.0 gym==0.9.2 smart_open && \
+        pip install git+https://github.com/robertnishihara/ray.git@87695eb3466cabfe2aa81ef49a9c8dbe392e79e0#subdirectory=python"
 
 RUN conda install -c conda-forge jupyter_contrib_nbextensions && \
       jupyter nbextension enable collapsible_headings/main && \
