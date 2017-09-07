@@ -253,8 +253,8 @@ Pong = {
     },
 
     draw: function(ctx) {
-      ctx.drawImage(this.press1.image, this.press1.x, this.press1.y);
-      ctx.drawImage(this.press2.image, this.press2.x, this.press2.y);
+      // ctx.drawImage(this.press1.image, this.press1.x, this.press1.y);
+      // ctx.drawImage(this.press2.image, this.press2.x, this.press2.y);
       if (this.winner == 0)
         ctx.drawImage(this.winner1.image, this.winner1.x, this.winner1.y);
       else if (this.winner == 1)
@@ -453,7 +453,8 @@ Pong = {
       // console.log(data);
       var self = this;
 
-      var predict_url = `${window.location.href}/predict`;
+      // var predict_url = `${window.location.href}/predict`;
+      var predict_url = "predict";
       // Query Clipper via the Pong server proxy
       fetch(predict_url, {
         method: 'POST',
