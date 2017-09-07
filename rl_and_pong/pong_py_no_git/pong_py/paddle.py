@@ -4,8 +4,8 @@ from pong_py.helper import Rectangle
 
 class Paddle():
     STOP = 0
-    UP = 1
-    DOWN = 2
+    DOWN = 1
+    UP = 2
 
 
     def __init__(self, rhs, pong):
