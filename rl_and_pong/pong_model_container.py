@@ -29,8 +29,8 @@ class PongPolicyContainer(rpc.ModelContainerBase):
         self.agent = PPOAgent('PongJS-v0', config)
         self.agent.restore(path)
         # Run test prediction to load the model
-        print("Predicted {} in constructor".format(
-            self.agent.compute_action(np.random.random(8))))
+        # print("Predicted {} in constructor".format(
+        #     self.agent.compute_action(np.random.random(8))))
 
     def predict_doubles(self, states):
         start = datetime.now()
