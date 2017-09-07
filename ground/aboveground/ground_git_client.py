@@ -73,7 +73,7 @@ def add_repo(repo_name):
     # create URLS for API interaction
     gitUrl = "https://github.com/" + repo_name
 
-    if os.path.isfile('/tmp/repo'):
+    if os.path.isdir('/tmp/repo'):
         shutil.rmtree('/tmp/repo')
 
     repo = git.Repo.init('/tmp/repo', bare=True)
