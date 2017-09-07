@@ -94,9 +94,9 @@ COPY ray/tutorial /home/$NB_USER/ray/
 USER $NB_USER
 RUN mkdir -p /home/$NB_USER/pong
 WORKDIR /home/$NB_USER/pong
-COPY pong/rl_exercise01.ipynb pong/rl_exercise02.ipynb pong/rl_exercise03.ipynb pong/rl_exercise04.ipynb pong/start_webserver.sh pong/get_docker_ip.sh ./
-COPY pong/pong_py_no_git/ ./pong_py_no_git
-COPY pong/javascript-pong/ ./javascript-pong
+COPY rl_and_pong/rl_exercise01.ipynb rl_and_pong/rl_exercise02.ipynb rl_and_pong/rl_exercise03.ipynb rl_and_pong/rl_exercise04.ipynb rl_and_pong/start_webserver.sh rl_and_pong/get_docker_ip.sh ./
+COPY rl_and_pong/pong_py_no_git/ ./pong_py_no_git
+COPY rl_and_pong/javascript-pong/ ./javascript-pong
 RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 
