@@ -91,8 +91,8 @@ COPY ray/tutorial /home/$NB_USER/ray/
 
 #### pong
 USER $NB_USER
-RUN mkdir -p /home/$NB_USER/pong
-WORKDIR /home/$NB_USER/pong
+RUN mkdir -p /home/$NB_USER/rl_and_pong
+WORKDIR /home/$NB_USER/rl_and_pong
 COPY rl_and_pong/rl_exercise01.ipynb rl_and_pong/rl_exercise02.ipynb rl_and_pong/rl_exercise03.ipynb rl_and_pong/rl_exercise04.ipynb rl_and_pong/start_webserver.sh rl_and_pong/get_docker_ip.sh ./
 COPY rl_and_pong/pong_py_no_git/ ./pong_py_no_git
 COPY rl_and_pong/javascript-pong/ ./javascript-pong
