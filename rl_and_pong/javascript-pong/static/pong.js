@@ -439,7 +439,7 @@ Pong = {
       //   return Math.random() * 2
       // });
 
-      var features = [this.pong.leftPaddle.y,
+      var features = [this.pong.leftPaddle.y, 0,
                       ball.x, ball.y,
                       ball.dx, ball.dy,
                       ball.x_prev, ball.y_prev].map(function(x) {
