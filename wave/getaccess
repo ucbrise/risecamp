@@ -6,6 +6,12 @@ if [[ $? -eq 0 ]] ; then
     exit 1
 fi
 
+bw2 bc -t $1 -u $NAMESPACE/*
+if [[ $? -eq 0 ]]; then
+    printf "\033[1;34mLooks like you already have permissions on $NAMESPACE/* \033[0m\n"
+    exit 0
+fi
+
 printf "\033[1;34mHello! I'm granting you permissions on $NAMESPACE/* now \033[0m\n"
 bw2 mkdot -f ns.ent -t $1 -u $NAMESPACE/* --ttl 5
 

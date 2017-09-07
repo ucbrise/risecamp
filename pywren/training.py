@@ -1,26 +1,8 @@
 import boto3
 
-rise_camp_bucket = "ampcamp-data"
-
-def check_result_1(result):
-    if result:
-        if result == "hello world!":
-            print("Correct!")
-        else:
-            print("Hmm...the result is not 'hello world!'")
-    else:
-        print("Hmm...the result is None, not 'hello world!'")
-
-def check_result_2(result):
-    if result:
-        if result == "hello world!":
-            print("Correct!")
-        else:
-            print("Hmm...the result is not 'hello world!'")
-    else:
-        print("Hmm...the result is None, not 'hello world!'")
-
 def plot_pywren_execution(futures):
+    import warnings
+    warnings.filterwarnings("ignore")
     from IPython import get_ipython
     get_ipython().run_line_magic('pylab', 'inline')
     import pylab
@@ -99,18 +81,16 @@ def plot_pywren_execution(futures):
     visualize_execution(info)
 
 
-def pywren_read_data(bucket, key):
+def read_from_s3(bucket, key):
     s3client = boto3.client("s3")
     r = s3client.get_object(Bucket=bucket, Key=key)
     return r['Body'].read().decode()
 
+wikipedia_bucket = "ampcamp-data"
 
 def list_keys_with_prefix(bucket, prefix):
     """
     Return a list of keys for the given prefix.
-    :param prefix: Prefix to filter object names.
-    :return: List of keys in bucket that match the given prefix.
-    :rtype: list of str
     """
     s3client = boto3.client("s3")
     paginator = s3client.get_paginator('list_objects_v2')
