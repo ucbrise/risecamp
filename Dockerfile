@@ -80,7 +80,7 @@ RUN pip install tensorflow==1.3.0 && \
     pip install opencv-python && \
     pip install scipy
 
-RUN pip install git+https://github.com/robertnishihara/ray.git@branchforrisecamp#subdirectory=python
+RUN pip install git+https://github.com/robertnishihara/ray.git@87695eb3466cabfe2aa81ef49a9c8dbe392e79e0#subdirectory=python
 
 RUN git clone https://github.com/catapult-project/catapult.git /tmp1/ray/catapult
 RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
