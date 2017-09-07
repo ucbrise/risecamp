@@ -1,10 +1,11 @@
 import json
 import os
+import shutil
 
 import git
 import requests
 import configparser
-from aboveground.ground import GroundClient
+from ground.client import GroundClient
 
 
 def get_commits(git_repo, latest_nodes):
@@ -57,7 +58,7 @@ def post_commits(commits, latest_nodes, repo_name, node_id):
             },
         }
 
-        nv_id = gc.create_node_version(node_id, tags, parent_nodes)['id']
+        nv_id = gc.createNodeVersion(node_id, tags=tags, parent_ids=parent_nodes)['id']
         node_ids[c['commitHash']] = nv_id
 
         print('Commit added to ground: ' + c['commitHash'])
@@ -71,6 +72,9 @@ gc = GroundClient()
 def add_repo(repo_name):
     # create URLS for API interaction
     gitUrl = "https://github.com/" + repo_name
+
+    if os.path.isfile('/tmp/repo'):
+        shutil.rmtree('/tmp/repo')
 
     repo = git.Repo.init('/tmp/repo', bare=True)
     origin = repo.create_remote('origin', url=gitUrl)
@@ -89,7 +93,7 @@ def add_repo(repo_name):
 
     g = git.Git('/tmp/repo')
     ground_repo_name = repo_name.split('/')[-1]
-    node_id = gc.create_node(ground_repo_name, ground_repo_name)['id']
+    node_id = gc.createNode(ground_repo_name, ground_repo_name, {})['id']
 
     repo_commits = get_commits(g, {})  # Get a list of the latest commits
     post_commits(repo_commits, {}, repo_name, node_id)

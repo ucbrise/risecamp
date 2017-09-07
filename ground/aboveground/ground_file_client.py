@@ -1,4 +1,4 @@
-from aboveground.ground import GroundClient
+from ground.client import GroundClient
 import os
 
 gc = GroundClient()
@@ -39,22 +39,23 @@ def add_file(file_path):
     file_path = file_path.split('/')[-1]
 
     # create a new node
-    node_id = gc.create_node(file_path, file_path)['id']
+    node_id = gc.createNode(file_path, file_path, {})['id']
 
     # create and return the node version; the empty array is the list of the
     # parent versions of this version (i.e., none)
-    node_version = gc.create_node_version(node_id, tags, [], structure_id=sv_id)
+    node_version = gc.createNodeVersion(node_id, tags=tags, structure_version_id=sv_id)
     return node_version
 
 
 def create_structure():
     # attempt to retrieve the structure
-    struct = gc.get_structure("dataset")
+    struct = gc.getStructure("dataset")
 
     if struct == None:
         # if it does not exist, create a new structure and structure version
-        structure_id = gc.create_structure("dataset", "dataset")['id']
-        return gc.create_structure_version({"size": "integer", "ctime": "integer", "path": "string"}, structure_id)['id']
+        structure_id = gc.createStructure("dataset", "dataset", {})['id']
+        return gc.createStructureVersion(structure_id, {"size": "integer", "ctime": "integer", "path": "string"})['id']
     else:
         # if it already exists, return the most recent version of it
-        return gc.get_structure_latest("dataset")[0]
+        sv_id = gc.getStructureLatestVersions("dataset")[0]
+        return gc.getStructureVersion(sv_id)

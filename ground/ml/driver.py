@@ -1,7 +1,7 @@
 import sys
 import pprint
 from time import sleep
-from ground import GroundClient
+from ground.client import GroundClient
 
 original_schema = {
 	"id" : {
@@ -78,26 +78,26 @@ client = GroundClient()
 pp = pprint.PrettyPrinter(indent=4)
 
 def init():
-	if "Error" in client.getNode("table_tweets"):
-		client.createNode("table_tweets")
+	if client.getNode("table_tweets") == None:
+		client.createNode("table_tweets", "table_tweets", {})
 		itemId = client.getNode("table_tweets")["itemId"]
 		client.createNodeVersion(itemId, tags=original_schema)
 
 def update_bk():
-	if len(client.getNodeVersionHistory("table_tweets")) < 2:
-		latestNV = client.getNodeVersionLatest("table_tweets")
+	if len(client.getNodeHistory("table_tweets")) < 2:
+		latestNV = client.getNodeLatestVersions("table_tweets")
 		itemId = client.getNode("table_tweets")["itemId"]
-		client.createNodeVersion(itemId, tags=alternative_schema, parentIds=latestNV)
+		client.createNodeVersion(itemId, tags=alternative_schema, parent_ids=latestNV)
 
 def update_fx():
-	latestNV = client.getNodeVersionLatest("table_tweets")
+	latestNV = client.getNodeLatestVersions("table_tweets")
 	itemId = client.getNode("table_tweets")["itemId"]
-	client.createNodeVersion(itemId, tags=original_schema, parentIds=latestNV)
+	client.createNodeVersion(itemId, tags=original_schema, parent_ids=latestNV)
 
 def debug():
 	# Prints the full path of node versions, starting at the root.
 	nodeVersions = []
-	nodeVersionHistory = client.getNodeVersionHistory("table_tweets")
+	nodeVersionHistory = client.getNodeHistory("table_tweets")
 	parent = '0'
 	print( '' )
 	print( "History of table schema for tweets, ordered from oldest to latest.")
@@ -114,10 +114,10 @@ def debug():
 
 
 def test_latest():
-	print (client.getNodeVersionLatest("table_tweets"))
+	print (client.getNodeLatestVersions("table_tweets"))
 
 def test_history():
-	print (client.getNodeVersionHistory("table_tweets"))
+	print (client.getNodeHistory("table_tweets"))
 
 flag = sys.argv[1]
 if flag == "i":
