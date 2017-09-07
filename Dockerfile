@@ -1,5 +1,5 @@
 # vim: set filetype=dockerfile:
-FROM jupyter/pyspark-notebook
+FROM jupyter/pyspark-notebook:786611348de1
 
 
 #### common
@@ -50,7 +50,15 @@ ENV DATA cifar/
 RUN mkdir -p cifar/ \
       && /bin/bash -c "source activate clipper_py2 && \
         conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn && \
-        pip install ray==0.2.0 tensorflow==1.3.0 gym==0.9.2 smart_open"
+        pip install tensorflow==1.3.0 gym==0.9.2 smart_open cython && \
+        pip install git+https://github.com/robertnishihara/ray.git@87695eb3466cabfe2aa81ef49a9c8dbe392e79e0#subdirectory=python"
+
+RUN conda install -c conda-forge jupyter_contrib_nbextensions && \
+      jupyter nbextension enable collapsible_headings/main && \
+      jupyter nbextension enable toc2/main
+
+# conda install -c conda-forge jupyter_contrib_nbextensions
+# jupyter contrib nbextension install --user
 
 RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py cifar/ && \
       python ./setup/extract_cifar.py cifar/ 10000 10000"
@@ -67,42 +75,6 @@ COPY clipper/clipper_exercises.ipynb \
       ./
 
 
-#### ground
-USER root
-
-RUN mkdir -p /home/$NB_USER/ground
-WORKDIR /home/$NB_USER/ground
-
-RUN conda install -y GitPython
-
-# install and set up postgres
-RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
-RUN sed 's/md5/trust/g' test.out > test2.out
-RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
-RUN rm test.out
-
-# install ground
-RUN apt-get install -y openjdk-8-jdk
-RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
-RUN unzip ground-0.1.2.zip
-RUN rm ground-0.1.2.zip
-RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
-RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
-
-# miscellaneous installs
-RUN apt-get install -y python3-pip python-pip
-RUN pip3 install pandas numpy requests
-RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLParser
-RUN pip2 install -U scikit-learn
-
-# copy new files in
-COPY ground/aboveground ground/ml ground/images risecamp/
-COPY ground/*.sh ground/*.ipynb ./
-RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
-# FIXME: is this needed?
-RUN chmod +x ground-0.1.2/bin/ground-postgres
-
-
 #### ray
 USER root
 RUN sudo mkdir /tmp1
@@ -116,14 +88,23 @@ RUN pip install tensorflow==1.3.0 && \
     pip install opencv-python && \
     pip install scipy
 
-RUN pip install git+https://github.com/robertnishihara/ray.git@branchforrisecamp#subdirectory=python
+RUN pip install git+https://github.com/robertnishihara/ray.git@87695eb3466cabfe2aa81ef49a9c8dbe392e79e0#subdirectory=python
 
 RUN git clone https://github.com/catapult-project/catapult.git /tmp1/ray/catapult
 RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
 
 RUN mkdir -p /home/$NB_USER/ray
-COPY ray/ray-test.ipynb /home/$NB_USER/ray/
 COPY ray/tutorial /home/$NB_USER/ray/
+
+
+#### pong
+USER $NB_USER
+RUN mkdir -p /home/$NB_USER/rl_and_pong
+WORKDIR /home/$NB_USER/rl_and_pong
+COPY rl_and_pong/rl_exercise01.ipynb rl_and_pong/rl_exercise02.ipynb rl_and_pong/rl_exercise03.ipynb rl_and_pong/rl_exercise04.ipynb rl_and_pong/start_webserver.sh rl_and_pong/get_docker_ip.sh ./
+COPY rl_and_pong/pong_py_no_git/ ./pong_py_no_git
+COPY rl_and_pong/javascript-pong/ ./javascript-pong
+RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 
 #### wave
@@ -174,18 +155,54 @@ ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 
-#### pong
-USER $NB_USER
-RUN mkdir -p /home/$NB_USER/pong
-WORKDIR /home/$NB_USER/pong
-COPY pong/rl_exercise06.ipynb pong/start_webserver.sh pong/get_docker_ip.sh ./
-COPY pong/pong_py_no_git/ ./pong_py_no_git
-COPY pong/javascript-pong/ ./javascript-pong
-RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
+#### ground
+USER root
 
+RUN mkdir -p /home/$NB_USER/ground
+WORKDIR /home/$NB_USER/ground
+
+RUN conda install -y GitPython
+
+# install and set up postgres
+RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
+RUN sed 's/md5/trust/g' test.out > test2.out
+RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
+RUN rm test.out
+
+# install ground
+RUN apt-get install -y openjdk-8-jdk
+RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
+RUN unzip ground-0.1.2.zip
+RUN rm ground-0.1.2.zip
+RUN chmod +x ground-0.1.2/bin/ground-postgres
+RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
+RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
+
+# miscellaneous installs
+RUN apt-get install -y python3-pip python-pip
+RUN pip3 install pandas numpy requests
+RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLParser
+RUN pip2 install -U scikit-learn
+
+# copy new files in
+COPY ground/aboveground /home/$NB_USER/ground/risecamp/aboveground
+COPY ground/ml/ /home/$NB_USER/ground/risecamp/ml/
+COPY ground/images/ /home/$NB_USER/ground/risecamp/images
+COPY ground/*.sh /home/$NB_USER/ground/
+COPY ground/*.ipynb /home/$NB_USER/ground/risecamp/
+
+RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/ground/risecamp/repo
+
+RUN git clone https://github.com/ground-context/client
+RUN cd client/python && python setup.py install
+RUN cd client/python && python2.7 setup.py install
+RUN rm -rf client
+
+ENV NB_GROUND_HOME /home/$NB_USER/ground
 
 #### finalize
 COPY ./risecamp_start.sh /opt
+#COPY ./.jupyter /home/$NB_USER/.jupyter
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
