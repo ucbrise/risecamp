@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./ground/ground_start.sh &
+cd ground && ./ground_start.sh && cd ..
 /opt/pywren/pywren_start.sh &
 
 # an enhanced kludge to ensure clipper successfully call docker.sock

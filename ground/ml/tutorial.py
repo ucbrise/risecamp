@@ -45,8 +45,6 @@ def show_all_model_versions():
 
     history = gc.getNodeHistory("model")
 
-    print(history)
-
     prev_parent = 0
     while history:
         child = history[str(prev_parent)]
@@ -82,7 +80,7 @@ def _get_data_schema(version=-1):
     gc = GroundClient()
 
     if version < 0:
-        version = gc.getNodeLatestVersion("table_tweets")[0]
+        version = gc.getNodeLatestVersions("table_tweets")[0]
 
     data_schema = gc.getNodeVersion(version)
 

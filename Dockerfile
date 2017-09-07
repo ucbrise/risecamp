@@ -163,6 +163,7 @@ RUN apt-get install -y openjdk-8-jdk
 RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
 RUN unzip ground-0.1.2.zip
 RUN rm ground-0.1.2.zip
+RUN chmod +x ground-0.1.2/bin/ground-postgres
 RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
 RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
 
@@ -179,9 +180,14 @@ COPY ground/images/ /home/$NB_USER/ground/risecamp/images
 COPY ground/*.sh /home/$NB_USER/ground/
 COPY ground/*.ipynb /home/$NB_USER/ground/risecamp/
 
-RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
-RUN chmod +x ground-0.1.2/bin/ground-postgres
+RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/ground/risecamp/repo
 
+RUN git clone https://github.com/ground-context/client
+RUN cd client/python && python setup.py install
+RUN cd client/python && python2.7 setup.py install
+RUN rm -rf client
+
+ENV NB_GROUND_HOME /home/$NB_USER/ground
 
 #### finalize
 COPY ./risecamp_start.sh /opt

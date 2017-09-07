@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # reset ground db; this is to make sure it doesn't break if run multiple times
-bash /home/$NB_USER/reset_ground.sh
+bash $NB_GROUND_HOME/reset_ground.sh
 
 # init git repo
 bash init_repo.sh
