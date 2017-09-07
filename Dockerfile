@@ -52,6 +52,13 @@ RUN mkdir -p cifar/ \
         conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn && \
         pip install ray==0.2.0 tensorflow==1.3.0 gym==0.9.2 smart_open"
 
+RUN conda install -c conda-forge jupyter_contrib_nbextensions && \
+      jupyter nbextension enable collapsible_headings/main && \
+      jupyter nbextension enable toc2/main
+
+# conda install -c conda-forge jupyter_contrib_nbextensions
+# jupyter contrib nbextension install --user
+
 RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py cifar/ && \
       python ./setup/extract_cifar.py cifar/ 10000 10000"
 
