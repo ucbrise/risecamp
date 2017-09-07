@@ -86,7 +86,6 @@ RUN git clone https://github.com/catapult-project/catapult.git /tmp1/ray/catapul
 RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
 
 RUN mkdir -p /home/$NB_USER/ray
-COPY ray/ray-test.ipynb /home/$NB_USER/ray/
 COPY ray/tutorial /home/$NB_USER/ray/
 
 
