@@ -11,7 +11,7 @@ DOCKER_RUN_FLAGS = \
 	--shm-size 64000m \
 	-e "NOTEBOOK_AUTH_TOKEN=$(NOTEBOOK_AUTH_TOKEN)" \
 	-e "NOTEBOOK_BASE_URL=$(NOTEBOOK_BASE_URL)" \
-	# --env-file ./pywren-config.env \
+	--env-file ./pywren-config.env \
 	#
 
 DOCKER_BUILD_FLAGS = \
