@@ -21,6 +21,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from shared import params, relevant_attributes
 
+from ground.client import GroundClient
+
 abspath = os.path.dirname(os.path.abspath(__file__))
 intermediary = {}
 
@@ -36,7 +38,7 @@ country_dict = {}
 for idx, code in enumerate(country_codes):
     country_dict[code] = idx
 intermediary["country_dict"] = country_dict
-    
+
 def convert_to_int(country_string):
     return country_dict[country_string]
 
@@ -59,3 +61,55 @@ intermediary["classifier"] = clf
 
 with open(abspath + '/intermediary.pkl', 'wb') as f:
     pickle.dump(intermediary, f, protocol = 2)
+
+'''
+REGISTER MODEL INFO WITH GROUND
+'''
+gc = GroundClient()
+
+# get the latest git commit in Ground
+latest_git_version = gc.getNodeLatestVersions("ml_repo")[0]
+
+# check if the model node already exists; if so, get the latest version of it
+# else create it
+node = gc.getNode("model")
+parents = []
+node_id = -1
+
+model_version = 1
+
+if node == None:
+    node_id = gc.createNode("model", "model")["id"]
+else:
+    parents = gc.getNodeLatestVersions("model")
+    model_version = gc.getNodeVersion(max(parents))["tags"]["version"]["value"] + 1
+    node_id = node["id"]
+
+tags = {
+    "version": {
+        "key": "version",
+        "value": model_version,
+        "type": "integer"
+    }
+}
+
+model_id = gc.createNodeVersion(node_id, tags=tags, parent_ids=parents)["id"]
+
+# get the latest version of the table info
+latest_table_version = gc.getNodeLatestVersions("table_tweets")[0]
+
+# create the lineage
+ctm_id = -1
+dtm_id = -1
+ctm = gc.getLineageEdge("code_to_model")
+
+
+if ctm == None:
+    ctm_id = gc.createLineageEdge("code_to_model", "code_to_model")["id"]
+    dtm_id = gc.createLineageEdge("data_to_model", "data_to_model")["id"]
+else:
+    ctm_id = ctm["id"]
+    dtm_id = gc.getLineageEdge("data_to_model")["id"]
+
+gc.createLineageEdgeVersion(ctm_id, latest_git_version, model_id)
+gc.createLineageEdgeVersion(dtm_id, latest_table_version, model_id)
