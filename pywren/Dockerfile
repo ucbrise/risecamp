@@ -4,11 +4,13 @@ USER root
 RUN mkdir -p /opt/pywren
 COPY config_encoder.py /opt/pywren/
 COPY training.py /opt/pywren/
+COPY matrix.py /opt/pywren/
 COPY pywren_start.sh /opt/pywren/
 RUN chown $NB_USER /opt/pywren/
 RUN chmod a+x /opt/pywren/config_encoder.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 RUN chmod a+r /opt/pywren/training.py
+RUN chmod a+r /opt/pywren/matrix.py
 
 USER $NB_USER
 
