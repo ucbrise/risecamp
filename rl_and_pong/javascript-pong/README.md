@@ -18,7 +18,7 @@ pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clip
 python clipper_mock_pong_server.py
 ```
 
-This script is just for testing purposes. The exercise in the [`/rl_exercise06.ipynb`](../rl_exercises06.ipynb) will walk you through the process of starting Clipper and deploying a real policy.
+This script is just for testing purposes. The exercise in the [`/rl_exercise04.ipynb`](../rl_exercises04.ipynb) will walk you through the process of starting Clipper and deploying a real policy.
 
 You can verify that Clipper is running with `docker ps`, you should see the four containers that Clipper launched. One container from each of the following images:
 

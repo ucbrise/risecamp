@@ -23,6 +23,9 @@ class PongPolicyContainer(rpc.ModelContainerBase):
         config['num_sgd_iter'] = 20
         config['sgd_batchsize'] = 8196
         config['model']['fcnet_hiddens'] = [32, 32]
+        config['gamma'] = 0.99
+        config['sgd_stepsize'] = 5e-3
+        config['kl_coeff'] = 0.1
         self.agent = PPOAgent('PongJS-v0', config)
         self.agent.restore(path)
         # Run test prediction to load the model

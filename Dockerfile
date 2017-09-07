@@ -52,6 +52,13 @@ RUN mkdir -p cifar/ \
         conda install -y -q libgcc numpy pyzmq subprocess32 pandas matplotlib seaborn tensorflow scikit-learn && \
         pip install ray==0.2.0 tensorflow==1.3.0 gym==0.9.2 smart_open"
 
+RUN conda install -c conda-forge jupyter_contrib_nbextensions && \
+      jupyter nbextension enable collapsible_headings/main && \
+      jupyter nbextension enable toc2/main
+
+# conda install -c conda-forge jupyter_contrib_nbextensions
+# jupyter contrib nbextension install --user
+
 RUN /bin/bash -c "source activate clipper_py2 && python ./setup/download_cifar.py cifar/ && \
       python ./setup/extract_cifar.py cifar/ 10000 10000"
 
@@ -80,23 +87,22 @@ RUN pip install tensorflow==1.3.0 && \
     pip install opencv-python && \
     pip install scipy
 
-RUN pip install git+https://github.com/robertnishihara/ray.git@branchforrisecamp#subdirectory=python
+RUN pip install git+https://github.com/robertnishihara/ray.git@87695eb3466cabfe2aa81ef49a9c8dbe392e79e0#subdirectory=python
 
 RUN git clone https://github.com/catapult-project/catapult.git /tmp1/ray/catapult
 RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
 
 RUN mkdir -p /home/$NB_USER/ray
-COPY ray/ray-test.ipynb /home/$NB_USER/ray/
 COPY ray/tutorial /home/$NB_USER/ray/
 
 
 #### pong
 USER $NB_USER
-RUN mkdir -p /home/$NB_USER/pong
-WORKDIR /home/$NB_USER/pong
-COPY pong/rl_exercise06.ipynb pong/start_webserver.sh pong/get_docker_ip.sh ./
-COPY pong/pong_py_no_git/ ./pong_py_no_git
-COPY pong/javascript-pong/ ./javascript-pong
+RUN mkdir -p /home/$NB_USER/rl_and_pong
+WORKDIR /home/$NB_USER/rl_and_pong
+COPY rl_and_pong/rl_exercise01.ipynb rl_and_pong/rl_exercise02.ipynb rl_and_pong/rl_exercise03.ipynb rl_and_pong/rl_exercise04.ipynb rl_and_pong/start_webserver.sh rl_and_pong/get_docker_ip.sh ./
+COPY rl_and_pong/pong_py_no_git/ ./pong_py_no_git
+COPY rl_and_pong/javascript-pong/ ./javascript-pong
 RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 
