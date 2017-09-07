@@ -41,11 +41,14 @@ class PongServer(BaseHTTPRequestHandler):
 
     # GET requests serve the corresponding file from the "static/" subdirectory
     def do_GET(self):
-        if self.path is "/":
-            self.path = "/index.html"
+        if self.path == "/pong" or self.path == "/pong/":
+            self.path = "/pong/index.html"
 
-        local_path = os.path.abspath(os.path.join(static_dir, self.path.lstrip("/")))
-        logger.info("local path {}".format(local_path))
+        if self.path.startswith("/pong/"):
+            self.path = self.path.replace("/pong/", "", 1)
+
+        local_path = os.path.abspath(os.path.join(static_dir, self.path))
+        logger.info("Local path: {}".format(local_path))
         if not in_static_dir(local_path):
             self.send_error(403, "Forbidden")
         elif not os.path.exists(local_path) or not os.path.isfile(local_path):
@@ -60,6 +63,9 @@ class PongServer(BaseHTTPRequestHandler):
                 return
 
     def do_POST(self):
+        if not self.path == "/pong/predict":
+            self.send_error(404, "Not Found")
+            return
 
         clipper_url = "http://{}/pong/predict".format(self.server.clipper_addr)
         content_length = int(self.headers['Content-Length'])
