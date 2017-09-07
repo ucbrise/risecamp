@@ -14,7 +14,7 @@ Pong = {
     paddleSpeed: 2,  // should be able to cross court vertically   in 2 seconds
     ballSpeed: 4,    // should be able to cross court horizontally in 4 seconds,
                      // at starting speed ...
-    ballAccel: 0,    // ... but accelerate as time passes
+    ballAccel: 8,    // ... but accelerate as time passes
     ballRadius: 5,
     sound: true
   },
