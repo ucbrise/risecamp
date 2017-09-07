@@ -38,7 +38,7 @@ class PongJS():
             return False, 0
 
     def get_state(self):
-        return np.array([self.left_pad.y,
+        return np.array([self.left_pad.y, 0,
                          self.ball.x, self.ball.y,
                          self.ball.dx, self.ball.dy,
                          self.ball.x_prev, self.ball.y_prev])
