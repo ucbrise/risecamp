@@ -1,5 +1,5 @@
 # vim: set filetype=dockerfile:
-FROM jupyter/pyspark-notebook
+FROM jupyter/pyspark-notebook:786611348de1
 
 
 #### common
@@ -67,57 +67,37 @@ COPY clipper/clipper_exercises.ipynb \
       ./
 
 
-#### ground
-#USER root
-#
-#RUN mkdir -p /home/$NB_USER/ground
-#WORKDIR /home/$NB_USER/ground
-#
-#RUN conda install -y GitPython
-#
-## install and set up postgres
-#RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
-#RUN sed 's/md5/trust/g' test.out > test2.out
-#RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
-#RUN rm test.out
-#
-## install ground
-#RUN apt-get install -y openjdk-8-jdk
-#RUN git clone https://github.com/ground-context/ground
-## TODO: change this once you cut a new release
-#RUN cd ground && sbt dist && cp modules/postgres/target/universal/ground-postgres-0.1.2-SNAPSHOT.zip /home/$NB_USER/ground/ground-0.1.2.zip
-#RUN unzip ground-0.1.2.zip
-#RUN mv ground-postgres-0.1.2-SNAPSHOT ground-0.1.2
-#RUN rm ground-0.1.2.zip
-#RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
-#RUN service postgresql start && cd ground/resources/scripts/postgres && python2.7 postgres_setup.py ground ground
-#
-## miscellaneous installs
-#RUN apt-get install -y python3-pip python-pip
-#RUN pip3 install pandas numpy requests
-#RUN pip install psycopg2 requests numpy
-#
-#
-## copy new files in
-#RUN mkdir -p /home/$NB_USER/ground/
-#COPY ground/*.py ground/config.ini ground/*.sh ground/Ground.ipynb ground/ml ./
-#RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
-
-
 #### ray
+USER root
+RUN sudo mkdir /tmp1
+RUN sudo chmod 777 /tmp1
+
 USER $NB_USER
 
-RUN pip install ray==0.2.0 && \
-    pip install tensorflow==1.3.0 && \
+RUN pip install tensorflow==1.3.0 && \
     pip install gym==0.9.2 && \
     pip install smart_open && \
     pip install opencv-python && \
     pip install scipy
 
+RUN pip install git+https://github.com/robertnishihara/ray.git@branchforrisecamp#subdirectory=python
+
+RUN git clone https://github.com/catapult-project/catapult.git /tmp1/ray/catapult
+RUN git -C /tmp1/ray/catapult checkout 33a9271eb3cf5caf925293ec6a4b47c94f1ac968
 
 RUN mkdir -p /home/$NB_USER/ray
 COPY ray/ray-test.ipynb /home/$NB_USER/ray/
 COPY ray/tutorial /home/$NB_USER/ray/
+
+
+#### pong
+USER $NB_USER
+RUN mkdir -p /home/$NB_USER/pong
+WORKDIR /home/$NB_USER/pong
+COPY pong/rl_exercise06.ipynb pong/start_webserver.sh pong/get_docker_ip.sh ./
+COPY pong/pong_py_no_git/ ./pong_py_no_git
+COPY pong/javascript-pong/ ./javascript-pong
+RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
 
 
 #### wave
@@ -149,35 +129,70 @@ RUN mkdir -p /home/$NB_USER/pywren
 RUN mkdir -p /opt/pywren
 COPY pywren/config_encoder.py /opt/pywren/
 COPY pywren/training.py /opt/pywren/
+COPY pywren/matrix.py /opt/pywren/
 COPY pywren/pywren_start.sh /opt/pywren/
 RUN chown $NB_USER /opt/pywren
 RUN chmod a+x /opt/pywren/config_encoder.py
 RUN chmod a+x /opt/pywren/training.py
+RUN chmod a+x /opt/pywren/matrix.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
 COPY pywren/*.ipynb /home/$NB_USER/pywren/
-RUN pip install pywren
-ENV PYWREN_LOGLEVEL INFO
+RUN cd /opt/pywren && git clone https://github.com/pywren/pywren.git && pip install -e pywren/
+ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
 
 
-#### pong
-USER $NB_USER
-RUN mkdir -p /home/$NB_USER/pong
-WORKDIR /home/$NB_USER/pong
-COPY pong/rl_exercise06.ipynb pong/get_docker_ip.sh ./
-COPY pong/pong_py_no_git/ ./pong_py_no_git
-RUN /bin/bash -c "source activate clipper_py2 && pip install ./pong_py_no_git"
+#### ground
+USER root
+
+RUN mkdir -p /home/$NB_USER/ground
+WORKDIR /home/$NB_USER/ground
+
+RUN conda install -y GitPython
+
+# install and set up postgres
+RUN sed 's/peer/trust/g' /etc/postgresql/9.5/main/pg_hba.conf > test.out
+RUN sed 's/md5/trust/g' test.out > test2.out
+RUN mv test2.out /etc/postgresql/9.5/main/pg_hba.conf
+RUN rm test.out
+
+# install ground
+RUN apt-get install -y openjdk-8-jdk
+RUN wget https://github.com/ground-context/ground/releases/download/v0.1.2/ground-0.1.2.zip
+RUN unzip ground-0.1.2.zip
+RUN rm ground-0.1.2.zip
+RUN service postgresql start && sudo su -c "createuser ground -d -s" -s /bin/sh postgres  && sudo su -c "createdb ground" -s /bin/sh postgres && sudo su -c "createuser root -d -s" -s /bin/sh postgres && sudo su -c "createuser $NB_USER -d -s" -s /bin/sh postgres
+RUN service postgresql start && cd ground-0.1.2/db && python2.7 postgres_setup.py ground ground
+
+# miscellaneous installs
+RUN apt-get install -y python3-pip python-pip
+RUN pip3 install pandas numpy requests
+RUN pip2 install psycopg2 requests numpy pandas tweet_preprocessor scipy HTMLParser
+RUN pip2 install -U scikit-learn
+
+# copy new files in
+COPY ground/aboveground /home/$NB_USER/ground/risecamp/aboveground
+COPY ground/ml/ /home/$NB_USER/ground/risecamp/ml/
+COPY ground/images/ /home/$NB_USER/ground/risecamp/images
+COPY ground/*.sh /home/$NB_USER/ground/
+COPY ground/*.ipynb /home/$NB_USER/ground/risecamp/
+
+RUN git clone https://github.com/ground-context/risecamp /home/$NB_USER/risecamp/repo
+RUN chmod +x ground-0.1.2/bin/ground-postgres
 
 
 #### finalize
 COPY ./risecamp_start.sh /opt
-COPY ./.jupyter /home/$NB_USER/.jupyter
+#COPY ./.jupyter /home/$NB_USER/.jupyter
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER
 RUN rmdir /home/$NB_USER/work
 
 WORKDIR /home/$NB_USER
+USER $NB_USER
+RUN pip install jupyterhub==0.7.2
+USER root
 CMD cd /home/$NB_USER && /opt/risecamp_start.sh

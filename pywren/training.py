@@ -1,6 +1,6 @@
 import boto3
 
-rise_camp_bucket = "ampcamp-data"
+wikipedia_bucket = "ampcamp-data"
 
 def check_result_1(result):
     if result:
@@ -60,9 +60,9 @@ def plot_pywren_execution(futures):
             
         time_offset = np.min(info_df.host_submit_time)
         fields = [('host submit', info_df.host_submit_time - time_offset), 
-                  ('job start', info_df.start_time - time_offset ), 
+                  ('task start', info_df.start_time - time_offset ), 
                   ('setup done', info_df.start_time + info_df.setup_time - time_offset), 
-                  ('job done', info_df.end_time - time_offset), 
+                  ('task done', info_df.end_time - time_offset), 
                   ('results returned', info_df.download_output_timestamp - time_offset)
                  ]
 
@@ -78,7 +78,7 @@ def plot_pywren_execution(futures):
             ax.scatter(val, y, c=palette[f_i], edgecolor='none', s=point_size, alpha=1)
             patches.append(mpatches.Patch(color=palette[f_i], label=field_name))
         ax.set_xlabel('wallclock time (sec)')
-        ax.set_ylabel('job')
+        ax.set_ylabel('task')
         
         # legend
         legend = pylab.legend(handles=patches, 
@@ -99,7 +99,7 @@ def plot_pywren_execution(futures):
     visualize_execution(info)
 
 
-def pywren_read_data(bucket, key):
+def read_from_s3(bucket, key):
     s3client = boto3.client("s3")
     r = s3client.get_object(Bucket=bucket, Key=key)
     return r['Body'].read().decode()
