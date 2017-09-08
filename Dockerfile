@@ -132,7 +132,6 @@ RUN rm -f /home/$NB_USER/.bw2bind.log
 
 #### pywren
 USER root
-RUN mkdir -p /home/$NB_USER/pywren
 RUN mkdir -p /opt/pywren
 COPY pywren/config_encoder.py /opt/pywren/
 COPY pywren/training.py /opt/pywren/
@@ -145,7 +144,12 @@ RUN chmod a+x /opt/pywren/matrix.py
 RUN chmod a+x /opt/pywren/pywren_start.sh
 
 USER $NB_USER
+RUN mkdir -p /home/$NB_USER/pywren
 COPY pywren/*.ipynb /home/$NB_USER/pywren/
+RUN mkdir -p /home/$NB_USER/pywren/solution
+COPY pywren/training.py /home/$NB_USER/pywren/
+COPY pywren/matrix.py /home/$NB_USER/pywren/
+COPY pywren/solution/*.ipynb /home/$NB_USER/pywren/solution/
 RUN cd /opt/pywren && git clone https://github.com/pywren/pywren.git && pip install -e pywren/
 ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
@@ -201,8 +205,7 @@ COPY ./risecamp_start.sh /opt
 #COPY ./.jupyter /home/$NB_USER/.jupyter
 
 USER root
-RUN chown -R $NB_USER:users /home/$NB_USER
-RUN rmdir /home/$NB_USER/work
+RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
 
 WORKDIR /home/$NB_USER
 USER $NB_USER

@@ -16,7 +16,9 @@ USER $NB_USER
 
 COPY *.ipynb /home/$NB_USER/
 RUN mkdir /home/$NB_USER/solution
-COPY solution/*.ipynb /home/$NB_USER/solution/
+COPY pywren/solution/*.ipynb /home/$NB_USER/solution/
+COPY pywren/training.py /home/$NB_USER/pywren/
+COPY pywren/matrix.py /home/$NB_USER/pywren/
 RUN cd /opt/pywren && git clone https://github.com/pywren/pywren.git && pip install -e pywren/
 ENV PYWREN_LOGLEVEL ERROR
 ENV PYTHONPATH="/opt/pywren:${PYTHONPATH}"
