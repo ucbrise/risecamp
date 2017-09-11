@@ -1,5 +1,4 @@
 from __future__ import print_function
-import numpy as np
 import os
 import sys
 import pong_py
@@ -11,7 +10,7 @@ import rpc
 
 
 class PongPolicyContainer(rpc.ModelContainerBase):
-    def __init__(self, path):
+    def __init__(self, path, fcnet_size):
         ray.init(num_workers=0)
 
         @ray.remote
@@ -22,15 +21,12 @@ class PongPolicyContainer(rpc.ModelContainerBase):
         config['num_workers'] = 3
         config['num_sgd_iter'] = 20
         config['sgd_batchsize'] = 8196
-        config['model']['fcnet_hiddens'] = [32, 32]
+        config['model']['fcnet_hiddens'] = fcnet_size
         config['gamma'] = 0.99
         config['sgd_stepsize'] = 5e-3
         config['kl_coeff'] = 0.1
         self.agent = PPOAgent('PongJS-v0', config)
         self.agent.restore(path)
-        # Run test prediction to load the model
-#         print("Predicted {} in constructor".format(
-#             self.agent.compute_action(np.random.random(7))))
 
     def predict_doubles(self, states):
         start = datetime.now()
@@ -72,7 +68,12 @@ if __name__ == "__main__":
     input_type = "doubles"
     model_dir_path = "/model"
     with open(os.path.join(model_dir_path, "metadata.json"), "r") as f:
-        checkpoint_file = json.load(f)["checkpoint"]
-    model = PongPolicyContainer(os.path.join(model_dir_path, checkpoint_file))
+        metadata = json.load(f)
+        checkpoint_file = metadata["checkpoint"]
+        if "fcnet_size" in metadata:
+            fcnet_size = metadata["fcnet_size"]
+        else:
+            fcnet_size = [32, 32]
+    model = PongPolicyContainer(os.path.join(model_dir_path, checkpoint_file), fcnet_size)
     rpc_service = rpc.RPCService()
     rpc_service.start(model, ip, port, model_name, model_version, input_type)

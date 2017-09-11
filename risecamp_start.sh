@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd ground && ./ground_start.sh && cd ..
-/opt/pywren/pywren_start.sh &
+# /opt/pywren/pywren_start.sh &
 
 # an enhanced kludge to ensure clipper successfully call docker.sock
 # https://stackoverflow.com/questions/23544282/what-is-the-best-way-to-manage-permissions-for-docker-shared-volumes/28596874#28596874
