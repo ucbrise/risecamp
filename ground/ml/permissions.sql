@@ -1,6 +1,0 @@
-GRANT ALL PRIVILEGES ON DATABASE risecamp TO ground;
-GRANT ALL PRIVILEGES ON TABLE tweets TO ground;
-GRANT ALL PRIVILEGES ON TABLE tweets_future TO ground;
-ALTER DATABASE risecamp OWNER TO ground;
-ALTER TABLE tweets OWNER TO ground;
-ALTER TABLE tweets_future OWNER TO ground;
