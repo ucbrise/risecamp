@@ -15,19 +15,14 @@ RUN pip install ray
 RUN mkdir -p /home/$NB_USER/ray
 COPY ray/tutorial /home/$NB_USER/ray/
 
-
-
-
+USER root
+RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
 
 #### finalize
 COPY ./risecamp_start.sh /opt
-#COPY ./.jupyter /home/$NB_USER/.jupyter
-
-# USER root
-# RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
 
 WORKDIR /home/$NB_USER
-# USER $NB_USER
+USER $NB_USER
 RUN pip install jupyterhub==0.7.2
 USER root
 CMD cd /home/$NB_USER && /opt/risecamp_start.sh
