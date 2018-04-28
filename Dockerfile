@@ -12,8 +12,8 @@ RUN pip install tensorflow==1.7.0 && \
 
 RUN pip install ray
 
-RUN mkdir -p /home/$NB_USER/ray
-COPY ray/tutorial /home/$NB_USER/ray/
+RUN mkdir -p /home/$NB_USER
+COPY ray/tutorial /home/$NB_USER/
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
