@@ -1,4 +1,4 @@
-DOCKER_TAG ?= risecamp2017
+DOCKER_TAG ?= raytut20180430
 
 NOTEBOOK_BASE_URL ?= /
 NOTEBOOK_AUTH_TOKEN ?= $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
