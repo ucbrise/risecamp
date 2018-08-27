@@ -1,3 +1,3 @@
 include ../Makefile.inc
 
-DOCKER_TAG = ucbjey/raytut20180430
+DOCKER_TAG = ucbjey/risecamp2018-ray
