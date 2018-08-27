@@ -1,10 +1,6 @@
 # vim: set filetype=dockerfile:
 FROM ucbjey/risecamp-base:latest
 
-USER $NB_USER
-
-#### ray
-
 RUN pip install tensorflow==1.7.0 && \
     pip install gym==0.10.5 && \
     pip install opencv-python
