@@ -1,5 +1,5 @@
 # vim: set filetype=dockerfile:
-FROM jupyter/pyspark-notebook:786611348de1
+FROM jupyter/pyspark-notebook:8ccdfc1da8d5
 
 USER $NB_USER
 
