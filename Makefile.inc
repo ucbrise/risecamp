@@ -27,13 +27,9 @@ build:
 clean-build:
 	docker build --no-cache --pull $(DOCKER_BUILD_FLAGS) .
 
-.PHONY: debug
-debug: build
-	docker run -it $(DOCKER_RUN_FLAGS) "$(DOCKER_TAG)"
-
 .PHONY: run
 run: build
-	docker run -it $(DOCKER_RUN_FLAGS) "$(DOCKER_TAG)"
+	docker run -it --user=root $(DOCKER_RUN_FLAGS) "$(DOCKER_TAG)"
 
 .PHONY: push
 push:
