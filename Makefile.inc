@@ -1,3 +1,5 @@
+# vim: filetype=make
+
 NOTEBOOK_AUTH_TOKEN := $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
 
 DOCKER_RUN_FLAGS = \
@@ -32,3 +34,7 @@ debug: build
 .PHONY: run
 run: build
 	docker run -it $(DOCKER_RUN_FLAGS) "$(DOCKER_TAG)"
+
+.PHONY: push
+push:
+	docker push "$(DOCKER_TAG)"
