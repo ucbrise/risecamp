@@ -1,10 +1,10 @@
-FROM ucbjey/risecamp-base:latest
+FROM ucbjey/risecamp2018-base:stable
 
-# use apt-get as user root to install linux
+# use apt-get as user "root" to install ubuntu packages
 USER root
 RUN apt-get install -y g++
 
-# use $NB_USER when installing python packages
+# use "$NB_USER" when installing python packages
 USER $NB_USER
 RUN pip install bokeh==0.13.0
 
