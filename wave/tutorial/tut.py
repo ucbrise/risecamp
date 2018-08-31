@@ -2,6 +2,7 @@
 import paho.mqtt.client as mqtt
 import time
 import grpc
+import base64
 import wave3 as wv
 
 # The permission set for smart home permissions
@@ -94,7 +95,12 @@ class HomeServer:
 
     def on_message(self, client, userdata, msg):
         proof, payload = unpack_payload(msg.payload)
+        if len(proof) == 0:
+            return
+        print (msg.topic)
+
         if msg.topic == self.nickname+"/smarthome/light":
+            print ("got light command\n")
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
                 requiredRTreePolicy=wv.RTreePolicy(
@@ -109,10 +115,13 @@ class HomeServer:
             if resp.error.code != 0:
                 raise Exception(resp.error)
             # TODO integrate with gabe's widget here
+            print (payload)
             if payload == "on":
                 self.light = True
+                print ("light turned on")
             if payload == "off":
                 self.light = False
+                print ("light turned off")
         elif msg.topic == self.nickname+"/smarthome/thermostat":
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
@@ -151,13 +160,18 @@ class HomeServer:
 
 
 def unpack_payload(payload):
+    if len(payload) < 100:
+        return b"", ""
     proof_len=int(payload[:8])
     proof = payload[8:proof_len+8]
+    bproof = base64.b64decode(proof)
     real_payload = payload[proof_len+8:]
-    return proof, real_payload
+    return bproof, str(real_payload,"utf8")
 
 def pack_payload(proof, payload):
-    return ("%08d" % (len(proof))) + proof + payload
+    b64 = str(base64.b64encode(proof),"utf8")
+    rv = ("%08d" % (len(b64))) + b64 + payload
+    return rv
 
 
 # Create the home server
@@ -183,7 +197,10 @@ proof = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
         )
     ]
 ))
-print ("proof resp:",proof)
+# should have no permissions
+print ("first attempt without permissions:")
+print (proof.error)
+
 hs.grant_permissions_to(entity.hash)
 proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
     perspective=perspective,
@@ -197,6 +214,17 @@ proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
         )
     ]
 ))
-print ("proof resp:",proof2)
+if proof2.error.code != 0:
+    raise Exception(proof2.error)
+
+client = mqtt.Client()
+client.username_pw_set("risecamp2018", "risecamp2018")
+client.connect("broker.cal-sdb.org", 1883, 60)
+client.loop_start()
+
+time.sleep(3)
+packed = pack_payload(proof2.proofDER,"on")
+client.publish("michael/smarthome/light", packed)
+
 
 time.sleep(30)
