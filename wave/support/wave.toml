@@ -1,0 +1,15 @@
+# WAVE configuration file
+
+# This stores sensitive information (decrypted graph nodes)
+# and should only be readable by the user WAVE runs as
+database = "/var/lib/wave/db"
+# This should ideally be below 1000 to prevent a non root service
+# from binding to this port
+listenIp = "127.0.0.1:410"
+
+[storage]
+  # This is the default HTTPS server until we get AWS/Azure
+  [storage.default]
+  provider = "http_v1"
+  url = "https://standalone.storage.bwave.io/v1"
+  version = "1"
