@@ -25,7 +25,7 @@ class PongJSEnv(gym.Env):
         self.env.init()
         return transform_state(self.env.get_state())
 
-    def _step(self, action):
+    def step(self, action):
         state, reward, done = self.env.step(action)
         return transform_state(state), 1, done, {}
         #return state, reward, done, {}
