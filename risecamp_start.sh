@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export SUMO_HOME="$HOME/sumo"
+export PATH="$HOME/sumo/bin:$PATH"
+export PYTHONPATH="$HOME/sumo/tools:$PYTHONPATH"
+
 if [ "${NOTEBOOK_AUTH_TOKEN}" != "" ]; then
   echo "*** Auth Token: ${NOTEBOOK_AUTH_TOKEN}"
   NOTEBOOK_FLAGS="${NOTEBOOK_FLAGS} --NotebookApp.token=\"${NOTEBOOK_AUTH_TOKEN}\""

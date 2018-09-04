@@ -1,16 +1,54 @@
 # vim: set filetype=dockerfile:
 FROM jupyter/pyspark-notebook:786611348de1
 
+USER root
+
+# General dependencies
+RUN apt-get update \
+    && apt-get install -y vim \
+    git \
+    wget \
+    emacs-nox \
+    cmake \
+    pkg-config \
+    build-essential \
+    autoconf \
+    curl \
+    libtool \
+    unzip
+
+# Flow dependencies
+RUN apt-get install  -y swig \
+    libgtest-dev \
+    autoconf \
+    pkg-config \
+    libgdal-dev \
+    libxerces-c-dev \
+    libproj-dev \
+    libfox-1.6-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    flex \
+    bison
+
 USER $NB_USER
 
 #### ray
 
-RUN pip install tensorflow==1.7.0 && \
+RUN pip install tensorflow==1.8.0 && \
     pip install gym==0.10.5 && \
     pip install opencv-python && \
     pip install scipy
 
-RUN pip install https://s3-us-west-2.amazonaws.com/ray-wheels/9ad94e33d611905347522c493ad58fe0237c87a2/ray-0.4.0-cp36-cp36m-manylinux1_x86_64.whl
+RUN pip install ray==0.5.2
+
+# Install flow
+ COPY ./install-sumo.sh /opt
+RUN bash /opt/install-sumo.sh
+COPY ./install-flow.sh /opt
+RUN bash /opt/install-flow.sh
+COPY ./install-web3d.sh /opt
+RUN bash /opt/install-web3d.sh
 
 RUN mkdir -p /home/$NB_USER
 COPY ray/tutorial /home/$NB_USER/
