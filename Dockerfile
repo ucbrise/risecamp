@@ -66,6 +66,9 @@ COPY ray /home/$NB_USER/
 # Install pong_py (for the pong exercise).
 RUN pip install /home/$NB_USER/utilities/pong_py
 
+# TensorFlow breaks without this.
+RUN pip uninstall -y dask
+
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
 
