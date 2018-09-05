@@ -64,7 +64,7 @@ RUN mkdir -p /home/$NB_USER
 COPY ray /home/$NB_USER/
 
 # Install py_pong (for the pong exercise).
-pip install /home/$NB_USER/utilities/pong_py
+RUN pip install /home/$NB_USER/utilities/pong_py
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
