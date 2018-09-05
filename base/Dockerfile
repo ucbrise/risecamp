@@ -1,6 +1,7 @@
 FROM jupyter/pyspark-notebook:8ccdfc1da8d5
 
 USER root
+RUN mkdir -p /usr/local/bin/start-notebook.d
 COPY ./risecamp_start.sh /opt
 CMD /opt/risecamp_start.sh
 
