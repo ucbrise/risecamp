@@ -31,6 +31,10 @@ RUN apt-get install  -y swig \
     flex \
     bison
 
+# web3d dependencies
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get install -y --no-install-recommends yarn
+
 USER $NB_USER
 
 #### ray
