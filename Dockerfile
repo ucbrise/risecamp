@@ -32,8 +32,10 @@ RUN apt-get install  -y swig \
     bison
 
 # web3d dependencies
+RUN sudo apt-get install apt-transport-https
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get install -y --no-install-recommends yarn
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends --allow-unauthenticated yarn
 
 USER $NB_USER
 
