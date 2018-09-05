@@ -50,7 +50,7 @@ RUN pip install ray==0.5.2
 
 # Install Modin.
 RUN git clone https://github.com/modin-project/modin.git && \
-    pip install modin
+    pip install -e /home/$NB_USER/modin
 
 # Install flow
  COPY ./install-sumo.sh /opt
@@ -64,7 +64,7 @@ RUN mkdir -p /home/$NB_USER
 COPY ray /home/$NB_USER/
 
 # Install py_pong (for the pong exercise).
-RUN pip install /home/$NB_USER/utilities/pong_py
+RUN pip install -e /home/$NB_USER/utilities/pong_py
 
 USER root
 RUN chown -R $NB_USER:users /home/$NB_USER && rmdir /home/$NB_USER/work
