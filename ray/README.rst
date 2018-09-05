@@ -83,3 +83,6 @@ RL Exercises
 
 **Exercise 5:** Train a policy to play pong using RLlib. Deploy it using actors,
 and play against the trained policy.
+
+**Exercise 6:** Train a policy for controlling a mixed autonomy traffic
+controller with RLlib and visualize the policy in the browser.
