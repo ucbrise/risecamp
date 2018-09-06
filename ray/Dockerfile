@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base:stable
+FROM ucbjey/risecamp2018-base
 
 USER $NB_USER
 

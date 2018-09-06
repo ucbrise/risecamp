@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base:stable
+FROM ucbjey/risecamp2018-base
 
 # use apt-get as user "root" to install ubuntu packages
 USER root

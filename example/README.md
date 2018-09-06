@@ -4,7 +4,7 @@ This year’s RISECamp tutorials will be in Jupyter notebooks running on
 Docker containers. We’ll use Docker Hub to coordinate builds, releases,
 and updates, thereby avoiding the merging and coordination problems
 encountered last year. Each project will be responsible for pushing
-their own builds to a Docker Hub repository and maintaining a `stable`
+their own builds to a Docker Hub repository and maintaining a `latest`
 tag pointing to their latest stable build.
 
 # Getting Started
