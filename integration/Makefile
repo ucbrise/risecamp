@@ -1,3 +1,3 @@
 include ../Makefile.inc
 
-DOCKER_TAG = ucbjey/risecamp2018-ray
+DOCKER_TAG = $(shell echo "FIXME: set DOCKER_TAG" >&2)
