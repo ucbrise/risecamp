@@ -6,6 +6,8 @@ RUN apt-get update
 RUN apt-get install -y g++ git daemon
 RUN cd /tmp && git clone https://github.com/immesys/pywave
 COPY support/prestart.sh /usr/local/bin/start-notebook.d
+COPY support/waved /usr/local/bin
+COPY support/wave.toml /usr/local/bin
 
 # use "$NB_USER" when installing python packages
 USER $NB_USER

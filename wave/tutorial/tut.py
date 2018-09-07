@@ -26,7 +26,7 @@ class HomeServer:
             entitySecret=wv.EntitySecret(DER=self.ent.SecretDER))
         self.agent.PublishEntity(
             wv.PublishEntityParams(DER=self.ent.PublicDER))
-        
+
         # instantiate and display widgets
         self.light_widget = widgets.Light('light-1')
         self.switch_widget = widgets.Switch('light-1')
@@ -34,7 +34,7 @@ class HomeServer:
         display(self.light_widget)
         display(self.switch_widget)
         display(self.thermostat_widget)
-        
+
         # TODO: have read/write topic?
         self.tstat_entity, self.tstat_encrypt_proof, self.tstat_msg_proof = self._make_device_entity('thermostat')
         self.light_entity, self.light_encrypt_proof, self.light_msg_proof = self._make_device_entity('light')
@@ -48,7 +48,7 @@ class HomeServer:
         self.client.username_pw_set("risecamp2018", "risecamp2018")
         self.client.connect("broker.cal-sdb.org", 1883, 60)
         self.client.loop_start()
-    
+
     def _make_device_entity(self, device):
         """
         - makes entity
@@ -105,7 +105,7 @@ class HomeServer:
         ))
         #print(r)
         #print('msg policy attested')
-        
+
         r = self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
             subjectHash=device_entity.hash,
@@ -115,7 +115,7 @@ class HomeServer:
         #print(r)
         #print('encrypt policy attested')
         #print(encrypt_policy)
-        
+
         encrypt_proof = self.agent.BuildRTreeProof(wv.BuildRTreeProofParams(
             perspective=device_perspective,
             namespace=encrypt_policy.rTreePolicy.namespace,
@@ -139,15 +139,15 @@ class HomeServer:
 
     def _publish_light_state(self, change):
         packed = pack_payload(self.light_msg_proof.proofDER, json.dumps({'state': 'on' if change.new else 'off'}))
-        self.client.publish("{0}/smarthome/light/report".format(nickname), packed)
-    
+        self.client.publish("{0}/smarthome/light/report".format(self.nickname), packed)
+
     def _publish_tstat_state(self, change):
         state = {'state': self.thermostat_widget.state,
                  'hsp': self.thermostat_widget.hsp,
                  'csp': self.thermostat_widget.csp,
                  'temperature': self.thermostat.temp}
         packed = pack_payload(self.tstat_msg_proof.proofDER, json.dumps(state))
-        self.client.publish('{0}/smarthome/thermostat/report'.format(nickname), packed)
+        self.client.publish('{0}/smarthome/thermostat/report'.format(self.nickname), packed)
 
     def grant_permissions_to(self, enthash):
         # grant the ability to decrypt data that the thermostat publishes
@@ -286,7 +286,7 @@ class HomeServer:
                 self.thermostat_widget.csp = tstat_fields.get('csp')
             if tstat_fields.get('temperature'):
                 self.thermostat_widget.temp = tstat_fields.get('temp')
-                
+
         elif msg.topic == self.nickname+"/smarthome/notify":
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
@@ -369,7 +369,7 @@ proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
 ))
 if proof2.error.code != 0:
     raise Exception(proof2.error)
-    
+
 proof3 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
     perspective=perspective,
     namespace=hs.namespace(),
