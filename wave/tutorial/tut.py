@@ -321,11 +321,13 @@ def pack_payload(proof, payload):
     rv = ("%08d" % (len(b64))) + b64 + payload
     return rv
 
+check_error(pb.Error)
 
 # Create the home server
 hs = HomeServer("michael")
 
 agent = wv.WAVEStub(grpc.insecure_channel("localhost:410"))
+
 entity = agent.CreateEntity(wv.CreateEntityParams())
 if entity.error.code != 0:
     raise Exception(entity.error)
@@ -341,7 +343,7 @@ proof = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
         wv.RTreePolicyStatement(
             permissionSet=smarthome_pset,
             permissions=["actuate"],
-            resource="smarthome/light",
+            resource="smarthome/light/control",
         )
     ]
 ))
@@ -369,6 +371,8 @@ proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
 ))
 if proof2.error.code != 0:
     raise Exception(proof2.error)
+
+# actuate the light directly with proof3
 
 proof3 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
     perspective=perspective,
@@ -403,5 +407,11 @@ packed = pack_payload(proof3.proofDER,json.dumps({'hsp': 70, 'csp': 78}))
 client.publish("michael/smarthome/thermostat/control", packed)
 
 
+#subscribe to utility, decryption fails, apply for permissions, decryption succeeeds
+
+# create entity convenience
+# check error function
+# utility functions for publish
+# utility function unpack (decrypt)
 
 #time.sleep(30)
