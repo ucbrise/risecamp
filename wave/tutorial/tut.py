@@ -2,8 +2,11 @@
 import paho.mqtt.client as mqtt
 import time
 import grpc
+import json
 import base64
 import wave3 as wv
+import widgets
+from IPython.display import display
 
 # The permission set for smart home permissions
 # a permission set is a random indentifier, there is nothing special about this
@@ -23,6 +26,21 @@ class HomeServer:
             entitySecret=wv.EntitySecret(DER=self.ent.SecretDER))
         self.agent.PublishEntity(
             wv.PublishEntityParams(DER=self.ent.PublicDER))
+        
+        # instantiate and display widgets
+        self.light_widget = widgets.Light('light-1')
+        self.switch_widget = widgets.Switch('light-1')
+        self.thermostat_widget = widgets.Thermostat()
+        display(self.light_widget)
+        display(self.switch_widget)
+        display(self.thermostat_widget)
+        
+        # TODO: have read/write topic?
+        self.tstat_entity, self.tstat_encrypt_proof, self.tstat_msg_proof = self._make_device_entity('thermostat')
+        self.light_entity, self.light_encrypt_proof, self.light_msg_proof = self._make_device_entity('light')
+        self.light_widget.observe(self._publish_light_state, 'state')
+        self.thermostat_widget.observe(self._publish_tstat_state)
+        # hook up triggers to report?
 
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
@@ -30,6 +48,106 @@ class HomeServer:
         self.client.username_pw_set("risecamp2018", "risecamp2018")
         self.client.connect("broker.cal-sdb.org", 1883, 60)
         self.client.loop_start()
+    
+    def _make_device_entity(self, device):
+        """
+        - makes entity
+        - publishes entity
+        - namespace grant to device entity read on <hash>/<device>/control
+        - namespace grant to device entity write on <hash>/<device>/report
+        """
+        device_entity = self.agent.CreateEntity(wv.CreateEntityParams())
+        if device_entity.error.code != 0:
+            raise Exception(device_entity.error)
+        self.agent.PublishEntity(wv.PublishEntityParams(DER=device_entity.PublicDER))
+        device_perspective=wv.Perspective(
+            entitySecret=wv.EntitySecret(DER=device_entity.SecretDER)
+        )
+
+        # grant permission to encrypt on device URIs, read/write on report/control respectively
+
+        encrypt_policy = wv.Policy(rTreePolicy=wv.RTreePolicy(
+            namespace=self.ent.hash,
+            indirections=5,
+            # TODO: need this?
+            # visibilityURI=[bytes("smarthome","utf8"),bytes(device,"utf8")],
+            statements=[
+                wv.RTreePolicyStatement(
+                    permissionSet=wv.WaveBuiltinPSET,
+                    permissions=[wv.WaveBuiltinE2EE],
+                    resource="smarthome/{0}/+".format(device),
+                )
+            ]
+        ))
+
+        msg_policy = wv.Policy(rTreePolicy=wv.RTreePolicy(
+            namespace=self.ent.hash,
+            indirections=5,
+            statements=[
+                  wv.RTreePolicyStatement(
+                    permissionSet=smarthome_pset,
+                    permissions=["read"],
+                    resource="smarthome/{0}/control".format(device),
+                ),
+                wv.RTreePolicyStatement(
+                    permissionSet=smarthome_pset,
+                    permissions=["write"],
+                    resource="smarthome/{0}/report".format(device),
+                )
+            ]
+        ))
+
+        r = self.agent.CreateAttestation(wv.CreateAttestationParams(
+            perspective=self.perspective,
+            subjectHash=device_entity.hash,
+            publish=True,
+            policy=msg_policy
+        ))
+        #print(r)
+        #print('msg policy attested')
+        
+        r = self.agent.CreateAttestation(wv.CreateAttestationParams(
+            perspective=self.perspective,
+            subjectHash=device_entity.hash,
+            publish=True,
+            policy=encrypt_policy,
+        ))
+        #print(r)
+        #print('encrypt policy attested')
+        #print(encrypt_policy)
+        
+        encrypt_proof = self.agent.BuildRTreeProof(wv.BuildRTreeProofParams(
+            perspective=device_perspective,
+            namespace=encrypt_policy.rTreePolicy.namespace,
+            resyncFirst=True,
+            statements=encrypt_policy.rTreePolicy.statements,
+        ))
+        if encrypt_proof.error.code != 0:
+            raise Exception(encrypt_proof.error)
+
+        msg_proof = self.agent.BuildRTreeProof(wv.BuildRTreeProofParams(
+            perspective=device_perspective,
+            namespace=msg_policy.rTreePolicy.namespace,
+            resyncFirst=True,
+            statements=msg_policy.rTreePolicy.statements,
+        ))
+        if msg_proof.error.code != 0:
+            raise Exception(msg_proof.error)
+        return device_entity, encrypt_proof, msg_proof
+
+
+
+    def _publish_light_state(self, change):
+        packed = pack_payload(self.light_msg_proof.proofDER, json.dumps({'state': 'on' if change.new else 'off'}))
+        self.client.publish("{0}/smarthome/light/report".format(nickname), packed)
+    
+    def _publish_tstat_state(self, change):
+        state = {'state': self.thermostat_widget.state,
+                 'hsp': self.thermostat_widget.hsp,
+                 'csp': self.thermostat_widget.csp,
+                 'temperature': self.thermostat.temp}
+        packed = pack_payload(self.tstat_msg_proof.proofDER, json.dumps(state))
+        self.client.publish('{0}/smarthome/thermostat/report'.format(nickname), packed)
 
     def grant_permissions_to(self, enthash):
         # grant the ability to decrypt data that the thermostat publishes
@@ -44,7 +162,7 @@ class HomeServer:
                 statements=[wv.RTreePolicyStatement(
                     permissionSet=wv.WaveBuiltinPSET,
                     permissions=[wv.WaveBuiltinE2EE],
-                    resource="smarthome/thermostat",
+                    resource="smarthome/thermostat/+",
                 )]
             ))
         ))
@@ -60,11 +178,29 @@ class HomeServer:
                 statements=[wv.RTreePolicyStatement(
                     permissionSet=wv.WaveBuiltinPSET,
                     permissions=[wv.WaveBuiltinE2EE],
-                    resource="smarthome/motion",
+                    resource="smarthome/motion/+",
                 )]
             ))
         ))
-        # grant the ability to actuate the thermostat and the notifications
+
+        # grant the ability to decrypt data that the light publishes
+        self.agent.CreateAttestation(wv.CreateAttestationParams(
+            perspective=self.perspective,
+            subjectHash=enthash,
+            publish=True,
+            policy=wv.Policy(rTreePolicy=wv.RTreePolicy(
+                namespace=self.ent.hash,
+                indirections=5,
+                visibilityURI=[bytes("smarthome","utf8"),bytes("light","utf8")],
+                statements=[wv.RTreePolicyStatement(
+                    permissionSet=wv.WaveBuiltinPSET,
+                    permissions=[wv.WaveBuiltinE2EE],
+                    resource="smarthome/light/+",
+                )]
+            ))
+        ))
+
+        # grant the ability to actuate the thermostat and the light and the notifications, and read the thermostat and light
         self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
             subjectHash=enthash,
@@ -74,17 +210,26 @@ class HomeServer:
                 indirections=5,
                 statements=[wv.RTreePolicyStatement(
                     permissionSet=smarthome_pset,
-                    permissions=["actuate"],
-                    resource="smarthome/thermostat",
+                    permissions=["write"],
+                    resource="smarthome/thermostat/control",
                 ),wv.RTreePolicyStatement(
                     permissionSet=smarthome_pset,
-                    permissions=["actuate"],
-                    resource="smarthome/light",
+                    permissions=["write"],
+                    resource="smarthome/light/control",
                 ),wv.RTreePolicyStatement(
                     permissionSet=smarthome_pset,
-                    permissions=["actuate"],
+                    permissions=["write"],
                     resource="smarthome/notify",
-                )]
+                ),wv.RTreePolicyStatement(
+                    permissionSet=smarthome_pset,
+                    permissions=["read"],
+                    resource="smarthome/thermostat/report",
+                ),wv.RTreePolicyStatement(
+                    permissionSet=smarthome_pset,
+                    permissions=["read"],
+                    resource="smarthome/light/report",
+                ),
+                ]
             ))
         ))
     def on_connect(self, client, userdata, flags, rc):
@@ -99,7 +244,7 @@ class HomeServer:
             return
         print (msg.topic)
 
-        if msg.topic == self.nickname+"/smarthome/light":
+        if msg.topic == self.nickname+"/smarthome/light/control":
             print ("got light command\n")
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
@@ -107,40 +252,41 @@ class HomeServer:
                     namespace=self.ent.hash,
                     statements=[wv.RTreePolicyStatement(
                         permissionSet=smarthome_pset,
-                        permissions=["actuate"],
-                        resource="smarthome/light",
+                        permissions=["write"],
+                        resource="smarthome/light/control",
                     )]
                 )
             ))
             if resp.error.code != 0:
                 raise Exception(resp.error)
-            # TODO integrate with gabe's widget here
-            print (payload)
-            if payload == "on":
-                self.light = True
-                print ("light turned on")
-            if payload == "off":
-                self.light = False
-                print ("light turned off")
-        elif msg.topic == self.nickname+"/smarthome/thermostat":
+            # actuate light state when the light receives a direct message
+            self.light_widget.state = json.loads(payload).get('state') == 'on'
+
+        elif msg.topic == self.nickname+"/smarthome/thermostat/control":
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
                 requiredRTreePolicy=wv.RTreePolicy(
                     namespace=self.ent.hash,
                     statements=[wv.RTreePolicyStatement(
                         permissionSet=smarthome_pset,
-                        permissions=["actuate"],
-                        resource="smarthome/thermostat",
+                        permissions=["write"],
+                        resource="smarthome/thermostat/control",
                     )]
                 )
             ))
             if resp.error.code != 0:
                 raise Exception(resp.error)
+
             # TODO integrate with gabe's widget here
-            if payload == "on":
-                self.thermostat = True
-            if payload == "off":
-                self.thermostat = False
+            tstat_fields = json.loads(payload)
+            print('thermostat command', tstat_fields)
+            if tstat_fields.get('hsp'):
+                self.thermostat_widget.hsp = tstat_fields.get('hsp')
+            if tstat_fields.get('csp'):
+                self.thermostat_widget.csp = tstat_fields.get('csp')
+            if tstat_fields.get('temperature'):
+                self.thermostat_widget.temp = tstat_fields.get('temp')
+                
         elif msg.topic == self.nickname+"/smarthome/notify":
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
@@ -157,6 +303,8 @@ class HomeServer:
                 raise Exception(resp.error)
             # TODO integrate with gabe's widget here
             print ("got notification: %s" % payload)
+        else:
+            print("topic", msg.topic, "payload", payload)
 
 
 def unpack_payload(payload):
@@ -209,13 +357,38 @@ proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
     statements=[
         wv.RTreePolicyStatement(
             permissionSet=smarthome_pset,
-            permissions=["actuate"],
-            resource="smarthome/light",
+            permissions=["write"],
+            resource="smarthome/light/control",
+        ),
+      wv.RTreePolicyStatement(
+            permissionSet=smarthome_pset,
+            permissions=["read"],
+            resource="smarthome/light/report",
         )
     ]
 ))
 if proof2.error.code != 0:
     raise Exception(proof2.error)
+    
+proof3 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
+    perspective=perspective,
+    namespace=hs.namespace(),
+    resyncFirst=True,
+    statements=[
+        wv.RTreePolicyStatement(
+            permissionSet=smarthome_pset,
+            permissions=["write"],
+            resource="smarthome/thermostat/control",
+        ),
+        wv.RTreePolicyStatement(
+            permissionSet=smarthome_pset,
+            permissions=["read"],
+            resource="smarthome/thermostat/report",
+        )
+    ]
+))
+if proof3.error.code != 0:
+    raise Exception(proof3.error)
 
 client = mqtt.Client()
 client.username_pw_set("risecamp2018", "risecamp2018")
@@ -223,8 +396,12 @@ client.connect("broker.cal-sdb.org", 1883, 60)
 client.loop_start()
 
 time.sleep(3)
-packed = pack_payload(proof2.proofDER,"on")
-client.publish("michael/smarthome/light", packed)
+packed = pack_payload(proof2.proofDER, json.dumps({'state': 'on'}))
+client.publish("michael/smarthome/light/control", packed)
+
+packed = pack_payload(proof3.proofDER,json.dumps({'hsp': 70, 'csp': 78}))
+client.publish("michael/smarthome/thermostat/control", packed)
 
 
-time.sleep(30)
+
+#time.sleep(30)
