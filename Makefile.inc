@@ -30,7 +30,3 @@ clean-build:
 .PHONY: run
 run: build
 	docker run -it --user=root $(DOCKER_RUN_FLAGS) "$(DOCKER_TAG)"
-
-.PHONY: push
-push:
-	docker push "$(DOCKER_TAG)"
