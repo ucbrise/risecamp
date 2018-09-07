@@ -1,12 +1,11 @@
-FROM immesys/risecamp2018-base
+FROM ucbjey/risecamp2018-base
 
 # use apt-get as user "root" to install ubuntu packages
 USER root
 RUN apt-get update
 RUN apt-get install -y g++ git daemon
 RUN cd /tmp && git clone https://github.com/immesys/pywave
-COPY support /support
-ENV PRE_START_SCRIPT=/support/prestart.sh
+COPY support/prestart.sh /usr/local/bin/start-notebook.d
 
 # use "$NB_USER" when installing python packages
 USER $NB_USER
