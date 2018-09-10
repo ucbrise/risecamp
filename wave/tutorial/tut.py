@@ -77,8 +77,10 @@ class HomeServer:
         # TODO: have read/write topic?
         self.tstat_entity, self.tstat_encrypt_proof, self.tstat_msg_proof = self._make_device_entity('thermostat')
         self.light_entity, self.light_encrypt_proof, self.light_msg_proof = self._make_device_entity('light')
+        self.motion_entity, self.motion_encrypt_proof, self.motion_msg_proof = self._make_device_entity('motion')
         self.light_widget.observe(self._publish_light_state, 'state')
         self.thermostat_widget.observe(self._publish_tstat_state)
+        self.motion_sensor_widget.observe(self._publish_motion_sensor_state)
         # hook up triggers to report?
 
         self.client = mqtt.Client()
@@ -210,6 +212,20 @@ class HomeServer:
             raise Exception(encrypted.error.message)
         self.client.publish('{0}/smarthome/thermostat/report'.format(self.nickname), encrypted.ciphertext)
 
+    def _publish_motion_sensor_state(self, change):
+        if not change['new']: return
+        state = 'triggered'
+        packed = pack_payload(self.motion_msg_proof.proofDER, json.dumps(state))
+        encrypted = self.agent.EncryptMessage(
+            wv.EncryptMessageParams(
+                namespace=self.namespace(),
+                resource="smarthome/motion/report",
+                content=bytes(packed,"utf8")))
+        if encrypted.error.code != 0:
+            raise Exception(encrypted.error.message)
+        self.client.publish('{0}/smarthome/motion/report'.format(self.nickname), encrypted.ciphertext)
+
+
     def grant_permissions_to(self, enthash):
         # grant the ability to decrypt data that the thermostat publishes
         resp = self.agent.CreateAttestation(wv.CreateAttestationParams(
@@ -291,8 +307,11 @@ class HomeServer:
                     permissionSet=smarthome_pset,
                     permissions=["read"],
                     resource="smarthome/light/report",
-                ),
-                ]
+               ),wv.RTreePolicyStatement(
+                    permissionSet=smarthome_pset,
+                    permissions=["read"],
+                    resource="smarthome/motion/report",
+                )]
             ))
         ))
         if resp.error.code != 0:

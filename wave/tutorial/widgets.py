@@ -74,6 +74,7 @@ class Switch(ipw.ToggleButton):
         self.value = not self.value
 
 class MotionSensor(ipw.Box):
+    state = Bool(False).tag(sync=True)
     def __init__(self, name='motionsensor-1'):
         self.button = ipw.Button()
         self.button.on_click(self._triggermotion)
@@ -104,11 +105,12 @@ class MotionSensor(ipw.Box):
         # TODO: publish
         self.button.style.button_color = '#219b03'
         self.button.description = 'Occupancy Triggered!'
+        self.state = True
         time.sleep(.8)
+        self.state = False
         self.button.style.button_color = '#d6d8db'
         self.button.description = 'Trigger Motion'
 
-#TODO: add the current state (heat/cool)
 class Thermostat(ipw.HBox):
     state = Enum(['Off',"Heating","Cooling"], default_value="Off").tag(sync=True)
     hsp = Float(70.0).tag(sync=True)
