@@ -6,26 +6,29 @@ import json
 import base64
 import wave3 as wv
 import widgets
+import pickle
 from IPython.display import display
 
 # The permission set for smart home permissions
 # a permission set is a random indentifier, there is nothing special about this
 smarthome_pset = bytes("GyAa3XjbDc-S_YoGCW-jXvX5qSmi_BexVDiFE0AdnpbkmA==", "utf8")
 
+# TODO add proper expiries to all the attestations. Default might be unsuitable
+
 class HomeServer:
     def __init__ (self, nickname):
         self.nickname = nickname
         channel = grpc.insecure_channel("localhost:410")
         self.agent = wv.WAVEStub(channel)
-        self.ent = self.agent.CreateEntity(wv.CreateEntityParams())
-        if self.ent.error.code != 0:
-            raise Exception(repr(self.ent.error))
+        
+        self.ent, newlycreated = createOrLoadEntity(self.agent, "homeserver")
         self.entityPublicDER = self.ent.PublicDER
         self.entitySecretDER = self.ent.SecretDER
         self.perspective =  wv.Perspective(
             entitySecret=wv.EntitySecret(DER=self.ent.SecretDER))
-        self.agent.PublishEntity(
-            wv.PublishEntityParams(DER=self.ent.PublicDER))
+        if newlycreated:
+            self.agent.PublishEntity(
+                wv.PublishEntityParams(DER=self.ent.PublicDER))
 
         # instantiate and display widgets
         self.light_widget = widgets.Light('light-1')
@@ -56,10 +59,9 @@ class HomeServer:
         - namespace grant to device entity read on <hash>/<device>/control
         - namespace grant to device entity write on <hash>/<device>/report
         """
-        device_entity = self.agent.CreateEntity(wv.CreateEntityParams())
-        if device_entity.error.code != 0:
-            raise Exception(device_entity.error)
-        self.agent.PublishEntity(wv.PublishEntityParams(DER=device_entity.PublicDER))
+        device_entity, newlyCreated = createOrLoadEntity(self.agent, device)
+        if newlyCreated:
+            self.agent.PublishEntity(wv.PublishEntityParams(DER=device_entity.PublicDER))
         device_perspective=wv.Perspective(
             entitySecret=wv.EntitySecret(DER=device_entity.SecretDER)
         )
@@ -97,24 +99,25 @@ class HomeServer:
             ]
         ))
 
-        r = self.agent.CreateAttestation(wv.CreateAttestationParams(
-            perspective=self.perspective,
-            subjectHash=device_entity.hash,
-            publish=True,
-            policy=msg_policy
-        ))
-        #print(r)
-        #print('msg policy attested')
+        if newlyCreated:
+            r = self.agent.CreateAttestation(wv.CreateAttestationParams(
+                perspective=self.perspective,
+                subjectHash=device_entity.hash,
+                publish=True,
+                policy=msg_policy
+            ))
+            #print(r)
+            #print('msg policy attested')
 
-        r = self.agent.CreateAttestation(wv.CreateAttestationParams(
-            perspective=self.perspective,
-            subjectHash=device_entity.hash,
-            publish=True,
-            policy=encrypt_policy,
-        ))
-        #print(r)
-        #print('encrypt policy attested')
-        #print(encrypt_policy)
+            r = self.agent.CreateAttestation(wv.CreateAttestationParams(
+                perspective=self.perspective,
+                subjectHash=device_entity.hash,
+                publish=True,
+                policy=encrypt_policy,
+            ))
+            #print(r)
+            #print('encrypt policy attested')
+            #print(encrypt_policy)
 
         encrypt_proof = self.agent.BuildRTreeProof(wv.BuildRTreeProofParams(
             perspective=device_perspective,
@@ -151,14 +154,13 @@ class HomeServer:
 
     def grant_permissions_to(self, enthash):
         # grant the ability to decrypt data that the thermostat publishes
-        self.agent.CreateAttestation(wv.CreateAttestationParams(
+        resp = self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
             subjectHash=enthash,
             publish=True,
             policy=wv.Policy(rTreePolicy=wv.RTreePolicy(
                 namespace=self.ent.hash,
                 indirections=5,
-                visibilityURI=[bytes("smarthome","utf8"),bytes("thermostat","utf8")],
                 statements=[wv.RTreePolicyStatement(
                     permissionSet=wv.WaveBuiltinPSET,
                     permissions=[wv.WaveBuiltinE2EE],
@@ -166,15 +168,16 @@ class HomeServer:
                 )]
             ))
         ))
+        if resp.error.code != 0:
+            raise Exception(resp.error.message)
         # grant the ability to decrypt data that the motion sensor publishes
-        self.agent.CreateAttestation(wv.CreateAttestationParams(
+        resp = self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
             subjectHash=enthash,
             publish=True,
             policy=wv.Policy(rTreePolicy=wv.RTreePolicy(
                 namespace=self.ent.hash,
                 indirections=5,
-                visibilityURI=[bytes("smarthome","utf8"),bytes("motion","utf8")],
                 statements=[wv.RTreePolicyStatement(
                     permissionSet=wv.WaveBuiltinPSET,
                     permissions=[wv.WaveBuiltinE2EE],
@@ -182,16 +185,16 @@ class HomeServer:
                 )]
             ))
         ))
-
+        if resp.error.code != 0:
+            raise Exception(resp.error.message)
         # grant the ability to decrypt data that the light publishes
-        self.agent.CreateAttestation(wv.CreateAttestationParams(
+        resp = self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
             subjectHash=enthash,
             publish=True,
             policy=wv.Policy(rTreePolicy=wv.RTreePolicy(
                 namespace=self.ent.hash,
                 indirections=5,
-                visibilityURI=[bytes("smarthome","utf8"),bytes("light","utf8")],
                 statements=[wv.RTreePolicyStatement(
                     permissionSet=wv.WaveBuiltinPSET,
                     permissions=[wv.WaveBuiltinE2EE],
@@ -199,9 +202,11 @@ class HomeServer:
                 )]
             ))
         ))
-
+        if resp.error.code != 0:
+            raise Exception(resp.error.message)
+            
         # grant the ability to actuate the thermostat and the light and the notifications, and read the thermostat and light
-        self.agent.CreateAttestation(wv.CreateAttestationParams(
+        resp = self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
             subjectHash=enthash,
             publish=True,
@@ -232,6 +237,8 @@ class HomeServer:
                 ]
             ))
         ))
+        if resp.error.code != 0:
+            raise Exception(resp.error.message)
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe(self.nickname+"/#")
 
@@ -321,90 +328,150 @@ def pack_payload(proof, payload):
     rv = ("%08d" % (len(b64))) + b64 + payload
     return rv
 
-check_error(pb.Error)
+
+def publishMessage(topic, proof, data):
+    packed = pack_payload(proof.proofDER, json.dumps(data))
+    mqttclient.publish(topic, packed)
+
+def checkError(pbobj):
+    if pbobj.error.code != 0:
+        print("Error: ", pbobj.error.message)
+        return True
+    return False
+
+# def encryptMessage(namespace, uri, msg):
+#     """
+#     Encrypt a message under a specific URI
+#     """
+#     resp = agent.EncryptMessage(wv.EncryptMessageParams(namespace=namespace, resource=uri))
+#     if resp.error.code != 0:
+#         raise Exception(resp.error.message)
+#     return resp.ciphertext
+        
+# def decryptMessage(perspective, msg):
+#     """
+#     Try decrypt a message. Returns None if the decryption fails
+#     """
+#     resp = agent.DecryptMessage(
+#         wv.DecryptMessageParams(perspective=perspective, content=msg, resyncFirst=True))
+#     if checkError(resp):
+#         return None
+#     return resp.content
+
+def Initialize(nickname):
+    """
+    Set up the home server with the user's nickname, 
+    and open a WAVE and MQTT client
+    """
+    homeserver = HomeServer(nickname)
+    wave = wv.WAVEStub(grpc.insecure_channel("localhost:410"))
+
+    mqttclient = mqtt.Client()
+    mqttclient.username_pw_set("risecamp2018", "risecamp2018")
+    mqttclient.connect("broker.cal-sdb.org", 1883, 60)
+    mqttclient.loop_start()
+    return wave, homeserver, mqttclient
+
+def createOrLoadEntity(agent, name):
+    """
+    Check if we have already created an entity (maybe we reset the notebook kernel)
+    and load it. Otherwise create a new entity and persist it to disk
+    """
+    try:
+        f = open("/tmp/entity-"+name, "rb")
+        entf = pickle.load(f)
+        f.close()
+        ent = wv.CreateEntityResponse(PublicDER=entf["pub"], SecretDER=entf["sec"], hash=entf["hash"])
+        return ent, False
+    except IOError: 
+        ent = agent.CreateEntity(wv.CreateEntityParams())
+        if ent.error.code != 0:
+            raise Exception(repr(ent.error))
+        entf = {"pub":ent.PublicDER, "sec":ent.SecretDER, "hash":ent.hash}
+        f = open("/tmp/entity-"+name, "wb")
+        pickle.dump(entf, f)
+        f.close()
+        resp = agent.PublishEntity(wv.PublishEntityParams(DER=ent.PublicDER))
+        if resp.error.code != 0:
+            raise Exception(resp.error.message)
+        return ent, True
 
 # Create the home server
-hs = HomeServer("michael")
 
-agent = wv.WAVEStub(grpc.insecure_channel("localhost:410"))
+# entity = agent.CreateEntity(wv.CreateEntityParams())
+# if entity.error.code != 0:
+#     raise Exception(entity.error)
+# agent.PublishEntity(wv.PublishEntityParams(DER=entity.PublicDER))
+# perspective=wv.Perspective(
+#     entitySecret=wv.EntitySecret(DER=entity.SecretDER)
+# )
+# proof = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
+#     perspective=perspective,
+#     namespace=hs.namespace(),
+#     resyncFirst=True,
+#     statements=[
+#         wv.RTreePolicyStatement(
+#             permissionSet=smarthome_pset,
+#             permissions=["actuate"],
+#             resource="smarthome/light/control",
+#         )
+#     ]
+# ))
+# # should have no permissions
+# print ("first attempt without permissions:")
+# print (proof.error)
 
-entity = agent.CreateEntity(wv.CreateEntityParams())
-if entity.error.code != 0:
-    raise Exception(entity.error)
-agent.PublishEntity(wv.PublishEntityParams(DER=entity.PublicDER))
-perspective=wv.Perspective(
-    entitySecret=wv.EntitySecret(DER=entity.SecretDER)
-)
-proof = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
-    perspective=perspective,
-    namespace=hs.namespace(),
-    resyncFirst=True,
-    statements=[
-        wv.RTreePolicyStatement(
-            permissionSet=smarthome_pset,
-            permissions=["actuate"],
-            resource="smarthome/light/control",
-        )
-    ]
-))
-# should have no permissions
-print ("first attempt without permissions:")
-print (proof.error)
-
-hs.grant_permissions_to(entity.hash)
-proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
-    perspective=perspective,
-    namespace=hs.namespace(),
-    resyncFirst=True,
-    statements=[
-        wv.RTreePolicyStatement(
-            permissionSet=smarthome_pset,
-            permissions=["write"],
-            resource="smarthome/light/control",
-        ),
-      wv.RTreePolicyStatement(
-            permissionSet=smarthome_pset,
-            permissions=["read"],
-            resource="smarthome/light/report",
-        )
-    ]
-))
-if proof2.error.code != 0:
-    raise Exception(proof2.error)
+# hs.grant_permissions_to(entity.hash)
+# proof2 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
+#     perspective=perspective,
+#     namespace=hs.namespace(),
+#     resyncFirst=True,
+#     statements=[
+#         wv.RTreePolicyStatement(
+#             permissionSet=smarthome_pset,
+#             permissions=["write"],
+#             resource="smarthome/light/control",
+#         ),
+#       wv.RTreePolicyStatement(
+#             permissionSet=smarthome_pset,
+#             permissions=["read"],
+#             resource="smarthome/light/report",
+#         )
+#     ]
+# ))
+# if proof2.error.code != 0:
+#     raise Exception(proof2.error)
 
 # actuate the light directly with proof3
 
-proof3 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
-    perspective=perspective,
-    namespace=hs.namespace(),
-    resyncFirst=True,
-    statements=[
-        wv.RTreePolicyStatement(
-            permissionSet=smarthome_pset,
-            permissions=["write"],
-            resource="smarthome/thermostat/control",
-        ),
-        wv.RTreePolicyStatement(
-            permissionSet=smarthome_pset,
-            permissions=["read"],
-            resource="smarthome/thermostat/report",
-        )
-    ]
-))
-if proof3.error.code != 0:
-    raise Exception(proof3.error)
+# proof3 = agent.BuildRTreeProof(wv.BuildRTreeProofParams(
+#     perspective=perspective,
+#     namespace=hs.namespace(),
+#     resyncFirst=True,
+#     statements=[
+#         wv.RTreePolicyStatement(
+#             permissionSet=smarthome_pset,
+#             permissions=["write"],
+#             resource="smarthome/thermostat/control",
+#         ),
+#         wv.RTreePolicyStatement(
+#             permissionSet=smarthome_pset,
+#             permissions=["read"],
+#             resource="smarthome/thermostat/report",
+#         )
+#     ]
+# ))
+# if proof3.error.code != 0:
+#     raise Exception(proof3.error)
 
-client = mqtt.Client()
-client.username_pw_set("risecamp2018", "risecamp2018")
-client.connect("broker.cal-sdb.org", 1883, 60)
-client.loop_start()
 
-time.sleep(3)
-packed = pack_payload(proof2.proofDER, json.dumps({'state': 'on'}))
-client.publish("michael/smarthome/light/control", packed)
 
-packed = pack_payload(proof3.proofDER,json.dumps({'hsp': 70, 'csp': 78}))
-client.publish("michael/smarthome/thermostat/control", packed)
+# time.sleep(3)
+# packed = pack_payload(proof2.proofDER, json.dumps({'state': 'on'}))
+# client.publish("michael/smarthome/light/control", packed)
+
+# packed = pack_payload(proof3.proofDER,json.dumps({'hsp': 70, 'csp': 78}))
+# client.publish("michael/smarthome/thermostat/control", packed)
 
 
 #subscribe to utility, decryption fails, apply for permissions, decryption succeeeds
