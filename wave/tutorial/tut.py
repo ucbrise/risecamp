@@ -24,7 +24,7 @@ class MQTTWrapper:
         self.client = mqttclient
         self.client.on_message = self.on_message
         self.callbacks = {}
-        
+
     def on_message(self, client, userdata, msg):
         try:
             print ("got message on:",msg.topic)
@@ -39,22 +39,22 @@ class MQTTWrapper:
             print ("callback got an error:", e)
         except:
             print ("callback got an unspecified error")
-    
+
     def subscribe(self, topic, callback):
         self.callbacks[topic] = callback
         print ("subscribing to", topic)
         self.client.subscribe(topic)
-        
+
     def publish(self, topic, msg):
         self.client.publish(topic, msg)
-        
-    
+
+
 class HomeServer:
     def __init__ (self, nickname):
         self.nickname = nickname
         channel = grpc.insecure_channel("localhost:410")
         self.agent = wv.WAVEStub(channel)
-        
+
         self.ent, newlycreated = createOrLoadEntity(self.agent, "homeserver")
         self.entityPublicDER = self.ent.PublicDER
         self.entitySecretDER = self.ent.SecretDER
@@ -68,9 +68,11 @@ class HomeServer:
         self.light_widget = widgets.Light('light-1')
         self.switch_widget = widgets.Switch('light-1')
         self.thermostat_widget = widgets.Thermostat()
-        display(self.light_widget)
-        display(self.switch_widget)
-        display(self.thermostat_widget)
+        self.motion_sensor_widget = widgets.MotionSensor()
+        self.lightbox = widgets.ipw.VBox([self.light_widget, self.switch_widget], layout=widgets.ipw.Layout(align_items='center', border='solid 2px'))
+        self.mybox = widgets.ipw.HBox([self.lightbox, self.motion_sensor_widget, self.thermostat_widget], layout=widgets.ipw.Layout(width='100%'))
+        display(self.mybox)
+
 
         # TODO: have read/write topic?
         self.tstat_entity, self.tstat_encrypt_proof, self.tstat_msg_proof = self._make_device_entity('thermostat')
@@ -85,6 +87,13 @@ class HomeServer:
         self.client.username_pw_set("risecamp2018", "risecamp2018")
         self.client.connect("broker.cal-sdb.org", 1883, 60)
         self.client.loop_start()
+
+    def render(self):
+        """
+        displays the widgets; shared state with all other renders
+        """
+        display(self.mybox)
+
 
     def _make_device_entity(self, device):
         """
@@ -178,8 +187,8 @@ class HomeServer:
         packed = pack_payload(self.light_msg_proof.proofDER, json.dumps({'state': 'on' if change.new else 'off'}))
         encrypted = self.agent.EncryptMessage(
             wv.EncryptMessageParams(
-                namespace=self.namespace(), 
-                resource="smarthome/light/report", 
+                namespace=self.namespace(),
+                resource="smarthome/light/report",
                 content=bytes(packed,"utf8")))
         if encrypted.error.code != 0:
             raise Exception(encrypted.error.message)
@@ -189,12 +198,13 @@ class HomeServer:
         state = {'state': self.thermostat_widget.state,
                  'hsp': self.thermostat_widget.hsp,
                  'csp': self.thermostat_widget.csp,
-                 'temperature': self.thermostat.temp}
+                 'temperature': self.thermostat_widget.temp,
+                 'occupied': self.thermostat_widget.occupied}
         packed = pack_payload(self.tstat_msg_proof.proofDER, json.dumps(state))
         encrypted = self.agent.EncryptMessage(
             wv.EncryptMessageParams(
-                namespace=self.namespace(), 
-                resource="smarthome/thermostat/report", 
+                namespace=self.namespace(),
+                resource="smarthome/thermostat/report",
                 content=bytes(packed,"utf8")))
         if encrypted.error.code != 0:
             raise Exception(encrypted.error.message)
@@ -252,7 +262,7 @@ class HomeServer:
         ))
         if resp.error.code != 0:
             raise Exception(resp.error.message)
-            
+
         # grant the ability to actuate the thermostat and the light and the notifications, and read the thermostat and light
         resp = self.agent.CreateAttestation(wv.CreateAttestationParams(
             perspective=self.perspective,
@@ -401,7 +411,7 @@ def checkError(pbobj):
 #     if resp.error.code != 0:
 #         raise Exception(resp.error.message)
 #     return resp.ciphertext
-        
+
 # def decryptMessage(perspective, msg):
 #     """
 #     Try decrypt a message. Returns None if the decryption fails
@@ -414,7 +424,7 @@ def checkError(pbobj):
 
 def Initialize(nickname):
     """
-    Set up the home server with the user's nickname, 
+    Set up the home server with the user's nickname,
     and open a WAVE and MQTT client
     """
     global t_homeserver
@@ -435,7 +445,7 @@ def createOrLoadEntity(agent, name):
         f.close()
         ent = wv.CreateEntityResponse(PublicDER=entf["pub"], SecretDER=entf["sec"], hash=entf["hash"])
         return ent, False
-    except IOError: 
+    except IOError:
         ent = agent.CreateEntity(wv.CreateEntityParams())
         if ent.error.code != 0:
             raise Exception(repr(ent.error))
