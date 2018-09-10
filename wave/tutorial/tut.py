@@ -15,6 +15,40 @@ smarthome_pset = bytes("GyAa3XjbDc-S_YoGCW-jXvX5qSmi_BexVDiFE0AdnpbkmA==", "utf8
 
 # TODO add proper expiries to all the attestations. Default might be unsuitable
 
+class MQTTWrapper:
+    def __init__ (self):
+        mqttclient = mqtt.Client()
+        mqttclient.username_pw_set("risecamp2018", "risecamp2018")
+        mqttclient.connect("broker.cal-sdb.org", 1883, 60)
+        mqttclient.loop_start()
+        self.client = mqttclient
+        self.client.on_message = self.on_message
+        self.callbacks = {}
+        
+    def on_message(self, client, userdata, msg):
+        try:
+            print ("got message on:",msg.topic)
+            for k in self.callbacks:
+                print ("checking match")
+                if mqtt.topic_matches_sub(k, msg.topic):
+                    print ("calling")
+                    self.callbacks[k](msg)
+                else:
+                    print ("no match")
+        except BaseException as e :
+            print ("callback got an error:", e)
+        except:
+            print ("callback got an unspecified error")
+    
+    def subscribe(self, topic, callback):
+        self.callbacks[topic] = callback
+        print ("subscribing to", topic)
+        self.client.subscribe(topic)
+        
+    def publish(self, topic, msg):
+        self.client.publish(topic, msg)
+        
+    
 class HomeServer:
     def __init__ (self, nickname):
         self.nickname = nickname
@@ -142,7 +176,14 @@ class HomeServer:
 
     def _publish_light_state(self, change):
         packed = pack_payload(self.light_msg_proof.proofDER, json.dumps({'state': 'on' if change.new else 'off'}))
-        self.client.publish("{0}/smarthome/light/report".format(self.nickname), packed)
+        encrypted = self.agent.EncryptMessage(
+            wv.EncryptMessageParams(
+                namespace=self.namespace(), 
+                resource="smarthome/light/report", 
+                content=bytes(packed,"utf8")))
+        if encrypted.error.code != 0:
+            raise Exception(encrypted.error.message)
+        self.client.publish("{0}/smarthome/light/report".format(self.nickname), encrypted.ciphertext)
 
     def _publish_tstat_state(self, change):
         state = {'state': self.thermostat_widget.state,
@@ -150,7 +191,14 @@ class HomeServer:
                  'csp': self.thermostat_widget.csp,
                  'temperature': self.thermostat.temp}
         packed = pack_payload(self.tstat_msg_proof.proofDER, json.dumps(state))
-        self.client.publish('{0}/smarthome/thermostat/report'.format(self.nickname), packed)
+        encrypted = self.agent.EncryptMessage(
+            wv.EncryptMessageParams(
+                namespace=self.namespace(), 
+                resource="smarthome/thermostat/report", 
+                content=bytes(packed,"utf8")))
+        if encrypted.error.code != 0:
+            raise Exception(encrypted.error.message)
+        self.client.publish('{0}/smarthome/thermostat/report'.format(self.nickname), encrypted.ciphertext)
 
     def grant_permissions_to(self, enthash):
         # grant the ability to decrypt data that the thermostat publishes
@@ -328,6 +376,12 @@ def pack_payload(proof, payload):
     rv = ("%08d" % (len(b64))) + b64 + payload
     return rv
 
+def composeMessage(proof, data):
+    return pack_payload(proof.proofDER, json.dumps(data))
+
+def decomposeMessage(data):
+    proof, payload = unpack_payload(data)
+    return proof, json.loads(payload)
 
 def publishMessage(topic, proof, data):
     packed = pack_payload(proof.proofDER, json.dumps(data))
@@ -363,14 +417,12 @@ def Initialize(nickname):
     Set up the home server with the user's nickname, 
     and open a WAVE and MQTT client
     """
-    homeserver = HomeServer(nickname)
-    wave = wv.WAVEStub(grpc.insecure_channel("localhost:410"))
-
-    mqttclient = mqtt.Client()
-    mqttclient.username_pw_set("risecamp2018", "risecamp2018")
-    mqttclient.connect("broker.cal-sdb.org", 1883, 60)
-    mqttclient.loop_start()
-    return wave, homeserver, mqttclient
+    global t_homeserver
+    t_homeserver = HomeServer(nickname)
+    global t_wave
+    t_wave = wv.WAVEStub(grpc.insecure_channel("localhost:410"))
+    mqttclient = MQTTWrapper()
+    return t_wave, t_homeserver, mqttclient
 
 def createOrLoadEntity(agent, name):
     """
