@@ -2,12 +2,24 @@ import ipywidgets as ipw
 import os
 import time
 import threading
+import datetime
 import math
 
 from IPython.display import display
 from traitlets import Bool, validate, Float, Enum
 
 _lights = {}
+
+class Notification(ipw.Textarea):
+    def __init__(self):
+        self.disabled = False
+        self.description = 'Messages: '
+        self.layout.width = '90%'
+        self.layout.height = '100px'
+        super(Notification, self).__init__()
+
+    def addmsg(self, msg):
+        self.value += '{0}:  {1}\n'.format(datetime.datetime.now().strftime('%b %d %I:%M:%S %p'), msg)
 
 class Light(ipw.Box):
     state = Bool(False).tag(sync=True)

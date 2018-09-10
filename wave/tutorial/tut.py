@@ -69,8 +69,12 @@ class HomeServer:
         self.switch_widget = widgets.Switch('light-1')
         self.thermostat_widget = widgets.Thermostat()
         self.motion_sensor_widget = widgets.MotionSensor()
+        self.notificationbox = widgets.Notification()
         self.lightbox = widgets.ipw.VBox([self.light_widget, self.switch_widget], layout=widgets.ipw.Layout(align_items='center', border='solid 2px'))
-        self.mybox = widgets.ipw.HBox([self.lightbox, self.motion_sensor_widget, self.thermostat_widget], layout=widgets.ipw.Layout(width='100%'))
+        self.mybox = widgets.ipw.VBox([
+            widgets.ipw.HBox([self.lightbox, self.motion_sensor_widget, self.thermostat_widget], layout=widgets.ipw.Layout(width='100%')),
+            self.notificationbox,
+        ])
         display(self.mybox)
 
 
@@ -89,6 +93,12 @@ class HomeServer:
         self.client.username_pw_set("risecamp2018", "risecamp2018")
         self.client.connect("broker.cal-sdb.org", 1883, 60)
         self.client.loop_start()
+
+    def notify(self, msg):
+        """
+        Displays message (adds timestamp) in notification box
+        """
+        self.notificationbox.addmsg(msg)
 
     def render(self):
         """
@@ -195,6 +205,8 @@ class HomeServer:
         if encrypted.error.code != 0:
             raise Exception(encrypted.error.message)
         self.client.publish("{0}/smarthome/light/report".format(self.nickname), encrypted.ciphertext)
+        self.notify("Light changed (local) to {0}".format('on' if change.new else 'off'))
+
 
     def _publish_tstat_state(self, change):
         state = {'state': self.thermostat_widget.state,
@@ -224,6 +236,7 @@ class HomeServer:
         if encrypted.error.code != 0:
             raise Exception(encrypted.error.message)
         self.client.publish('{0}/smarthome/motion/report'.format(self.nickname), encrypted.ciphertext)
+        self.notify("Motion sensor triggered!")
 
 
     def grant_permissions_to(self, enthash):
@@ -345,6 +358,7 @@ class HomeServer:
                 raise Exception(resp.error)
             # actuate light state when the light receives a direct message
             self.light_widget.state = json.loads(payload).get('state') == 'on'
+            self.notify("Light changed (remove) to {0}".format('on' if self.light_widget.state else 'off'))
 
         elif msg.topic == self.nickname+"/smarthome/thermostat/control":
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
@@ -366,8 +380,10 @@ class HomeServer:
             print('thermostat command', tstat_fields)
             if tstat_fields.get('hsp'):
                 self.thermostat_widget.hsp = tstat_fields.get('hsp')
+                self.notify("Thermostat heating setpoint changed to {0}".format(self.thermostat_widget.hsp))
             if tstat_fields.get('csp'):
                 self.thermostat_widget.csp = tstat_fields.get('csp')
+                self.notify("Thermostat cooling setpoint changed to {0}".format(self.thermostat_widget.csp))
             if tstat_fields.get('temperature'):
                 self.thermostat_widget.temp = tstat_fields.get('temp')
 
