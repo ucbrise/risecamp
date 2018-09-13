@@ -27,14 +27,9 @@ class MQTTWrapper:
 
     def on_message(self, client, userdata, msg):
         try:
-            print ("got message on:",msg.topic)
             for k in self.callbacks:
-                print ("checking match")
                 if mqtt.topic_matches_sub(k, msg.topic):
-                    print ("calling")
                     self.callbacks[k](msg)
-                else:
-                    print ("no match")
         except BaseException as e :
             print ("callback got an error:", e)
         except:
@@ -42,7 +37,6 @@ class MQTTWrapper:
 
     def subscribe(self, topic, callback):
         self.callbacks[topic] = callback
-        print ("subscribing to", topic)
         self.client.subscribe(topic)
 
     def publish(self, topic, msg):
@@ -205,7 +199,7 @@ class HomeServer:
         if encrypted.error.code != 0:
             raise Exception(encrypted.error.message)
         self.client.publish("{0}/smarthome/light/report".format(self.nickname), encrypted.ciphertext)
-        self.notify("Light changed (local) to {0}".format('on' if change.new else 'off'))
+        #self.notify("Light changed (local) to {0}".format('on' if change.new else 'off'))
 
 
     def _publish_tstat_state(self, change):
@@ -339,10 +333,8 @@ class HomeServer:
         proof, payload = unpack_payload(msg.payload)
         if len(proof) == 0:
             return
-        print (msg.topic)
 
         if msg.topic == self.nickname+"/smarthome/light/control":
-            print ("got light command\n")
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
                 proofDER=proof,
                 requiredRTreePolicy=wv.RTreePolicy(
@@ -358,7 +350,7 @@ class HomeServer:
                 raise Exception(resp.error)
             # actuate light state when the light receives a direct message
             self.light_widget.state = json.loads(payload).get('state') == 'on'
-            self.notify("Light changed (remove) to {0}".format('on' if self.light_widget.state else 'off'))
+            #self.notify("Light changed (remote) to {0}".format('on' if self.light_widget.state else 'off'))
 
         elif msg.topic == self.nickname+"/smarthome/thermostat/control":
             resp = self.agent.VerifyProof(wv.VerifyProofParams(
@@ -377,7 +369,7 @@ class HomeServer:
 
             # TODO integrate with gabe's widget here
             tstat_fields = json.loads(payload)
-            print('thermostat command', tstat_fields)
+            #print('thermostat command', tstat_fields)
             if tstat_fields.get('hsp'):
                 self.thermostat_widget.hsp = tstat_fields.get('hsp')
                 self.notify("Thermostat heating setpoint changed to {0}".format(self.thermostat_widget.hsp))
@@ -394,15 +386,14 @@ class HomeServer:
                     namespace=self.ent.hash,
                     statements=[wv.RTreePolicyStatement(
                         permissionSet=smarthome_pset,
-                        permissions=["actuate"],
-                        resource="smarthome/thermostat",
+                        permissions=["write"],
+                        resource="smarthome/notify",
                     )]
                 )
             ))
             if resp.error.code != 0:
                 raise Exception(resp.error)
-            # TODO integrate with gabe's widget here
-            print ("got notification: %s" % payload)
+            self.notify(json.loads(payload))
         else:
             print("topic", msg.topic, "payload", payload)
 
