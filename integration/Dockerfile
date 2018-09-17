@@ -9,3 +9,4 @@ RUN pip install tensorflow==1.7.0 && \
 RUN pip install ray==0.5.2
 
 COPY pong_py_no_git /home/$NB_USER/
+COPY rl_exercise04.ipynb /home/$NB_USER/
