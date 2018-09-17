@@ -5,16 +5,25 @@ import grpc
 import json
 import base64
 import wave3 as wv
-import widgets
+import scaffold.widgets as widgets
 import pickle
+import threading
+import traceback
+import base64
 from IPython.display import display
 
 # The permission set for smart home permissions
 # a permission set is a random indentifier, there is nothing special about this
 smarthome_pset = bytes("GyAa3XjbDc-S_YoGCW-jXvX5qSmi_BexVDiFE0AdnpbkmA==", "utf8")
 
-# TODO add proper expiries to all the attestations. Default might be unsuitable
 
+# some utility functions
+def hashToBase64(hash):
+    return str(base64.b64encode(hash), "utf8")
+def hashFromBase64(b64):
+    return base64.b64decode(b64)
+
+# TODO add proper expiries to all the attestations. Default might be unsuitable
 class MQTTWrapper:
     def __init__ (self):
         mqttclient = mqtt.Client()
@@ -24,19 +33,23 @@ class MQTTWrapper:
         self.client = mqttclient
         self.client.on_message = self.on_message
         self.callbacks = {}
+        self.mu = threading.Lock()
 
     def on_message(self, client, userdata, msg):
         try:
+            self.mu.acquire()
             for k in self.callbacks:
                 if mqtt.topic_matches_sub(k, msg.topic):
                     self.callbacks[k](msg)
-        except BaseException as e :
-            print ("callback got an error:", e)
         except:
-            print ("callback got an unspecified error")
-
+            traceback.print_exc()
+        finally:
+            self.mu.release()
+            
     def subscribe(self, topic, callback):
+        self.mu.acquire()
         self.callbacks[topic] = callback
+        self.mu.release()
         self.client.subscribe(topic)
 
     def publish(self, topic, msg):
@@ -347,7 +360,8 @@ class HomeServer:
                 )
             ))
             if resp.error.code != 0:
-                raise Exception(resp.error)
+                print("home server received light control with invalid proof: ",resp.error.message)
+                return
             # actuate light state when the light receives a direct message
             self.light_widget.state = json.loads(payload).get('state') == 'on'
             #self.notify("Light changed (remote) to {0}".format('on' if self.light_widget.state else 'off'))
@@ -365,7 +379,8 @@ class HomeServer:
                 )
             ))
             if resp.error.code != 0:
-                raise Exception(resp.error)
+                print("home server received thermostat control with invalid proof: ",resp.error.message)
+                return
 
             # TODO integrate with gabe's widget here
             tstat_fields = json.loads(payload)
@@ -392,7 +407,8 @@ class HomeServer:
                 )
             ))
             if resp.error.code != 0:
-                raise Exception(resp.error)
+                print("home server received notify with invalid proof: ",resp.error.message)
+                return
             self.notify(json.loads(payload))
         else:
             print("topic", msg.topic, "payload", payload)
@@ -453,6 +469,8 @@ def Initialize(nickname):
     Set up the home server with the user's nickname,
     and open a WAVE and MQTT client
     """
+    if nickname == "john-smith":
+        raise Exception("you must change your nickname to something unique")
     global t_homeserver
     t_homeserver = HomeServer(nickname)
     global t_wave
