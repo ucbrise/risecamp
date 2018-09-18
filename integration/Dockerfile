@@ -9,10 +9,15 @@ USER $NB_USER
 RUN pip install tensorflow==1.7.0 && \
     pip install gym==0.10.5 && \
     pip install opencv-python && \
-    pip install graphviz
+    pip install graphviz && \
+    pip install gitpython && \
+    pip install tqdm
 
 RUN pip install ray==0.5.2
 
+RUN touch a
+
+RUN git clone https://github.com/ucbrise/flor
 WORKDIR /home/$NB_USER
 RUN git clone https://github.com/ground-context/grit
 RUN git clone https://github.com/ground-context/client
