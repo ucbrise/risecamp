@@ -10,10 +10,10 @@ RUN apt-get install -y python-pydot python-pydot-ng graphviz
 USER $NB_USER
 
 # download and set up Flor
+RUN pip3 install graphviz gitpython tqdm
 RUN git clone https://github.com/ucbrise/flor
 WORKDIR flor
 RUN pip3 install -r requirements.txt
-RUN pip3 install graphviz
 
 # download and install grit
 WORKDIR /home/$NB_USER
