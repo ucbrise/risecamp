@@ -2,10 +2,17 @@ FROM ucbjey/risecamp2018-base
 
 USER root
 RUN apt-get update
-RUN apt-get install -y python-pydot python-pydot-ng graphviz
+RUN apt-get install -y python-pydot python-pydot-ng graphviz git daemon
+
+# For wave
+RUN cd /tmp && git clone https://github.com/immesys/pywave
+COPY wavesupport/prestart.sh /usr/local/bin/start-notebook.d
+COPY wavesupport/waved /usr/local/bin
+COPY wavesupport/wave.toml /usr/local/bin
 
 USER $NB_USER
 
+RUN cd /tmp/pywave && pip install .
 RUN pip install tensorflow==1.7.0 && \
     pip install gym==0.10.5 && \
     pip install opencv-python && \
