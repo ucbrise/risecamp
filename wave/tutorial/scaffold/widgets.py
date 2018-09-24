@@ -90,7 +90,7 @@ class MotionSensor(ipw.Box):
     def __init__(self, name='motionsensor-1'):
         self.button = ipw.Button()
         self.button.on_click(self._triggermotion)
-        self.button.description = 'Trigger Motion'
+        self.button.description = 'Deliver Package'
         self.button.style.button_color = '#d6d8db'
         img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
         img_sensor = os.path.join(img_path, "motionsensor.png")
