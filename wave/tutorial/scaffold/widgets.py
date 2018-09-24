@@ -205,9 +205,22 @@ class Thermostat(ipw.HBox):
         self.children = form_items
 
     def _controlloop(self):
-        if self.temp < self.hsp:
+        # use hysteresis
+        if self.state == 'Heating':
+            hyst_hsp = self.hsp+1
+        else:
+            hyst_hsp = self.hsp
+
+        if self.state == 'Cooling':
+            hyst_csp = self.csp-1
+        else:
+            hyst_csp = self.csp
+
+
+
+        if self.temp < hyst_hsp:
             self.state = 'Heating'
-        elif self.temp > self.csp:
+        elif self.temp > hyst_csp:
             self.state = 'Cooling'
         else:
             self.state = 'Off'
