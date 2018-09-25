@@ -5,7 +5,6 @@ NOTEBOOK_AUTH_TOKEN := $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
 DOCKER_RUN_FLAGS = \
 	--rm \
 	-p 8888:8888 \
-	-v /tmp:/tmp \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
 	-e "NOTEBOOK_AUTH_TOKEN=$(NOTEBOOK_AUTH_TOKEN)" \
