@@ -12,6 +12,8 @@ if [ "${NOTEBOOK_BASE_URL}" != "" ]; then
   NOTEBOOK_FLAGS="${NOTEBOOK_FLAGS} --NotebookApp.base_url=\"${NOTEBOOK_BASE_URL}\""
 fi
 
+chgrp docker /var/run/docker.sock
+
 cd "/home/$NB_USER"
 chown -R "$NB_USER:users" .
 start-notebook.sh ${NOTEBOOK_FLAGS}
