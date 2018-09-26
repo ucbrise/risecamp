@@ -2,8 +2,9 @@ import os
 import wave3 as wv
 import grpc
 import cloudpickle
-from clipper_admin.deployers import python as rllib_deployer
-# from clipper_rllib_deployer import deploy_rllib_model
+# from clipper_admin.deployers import python as rllib_deployer
+from clipper_admin.deployers import python as py_deployer
+from clipper_rllib_deployer import deploy_rllib_model
 
 def auth_deploy_rllib_model(
     clipper_conn,
