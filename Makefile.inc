@@ -8,7 +8,9 @@ DOCKER_RUN_FLAGS = \
 	--rm \
 	--name "$(CONTAINER_NAME)" \
 	-p 8888:8888 \
+        --network host \
 	-v /var/run/docker.sock:/var/run/docker.sock \
+        -v /tmp:/tmp \
 	--shm-size 64000m \
 	-e "NOTEBOOK_AUTH_TOKEN=$(NOTEBOOK_AUTH_TOKEN)" \
 	-e "NOTEBOOK_BASE_URL=$(NOTEBOOK_BASE_URL)" \
