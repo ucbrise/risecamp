@@ -1,11 +1,11 @@
 #!/bin/bash
 
-RUN echo "[default]" > /home/$NB_USER/.aws/credentials
-RUN echo "aws_access_key_id = $AWS_ACCESS_KEY_ID" >> /home/$NB_USER/.aws/credentials
-RUN echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> /home/$NB_USER/.aws/credentials
-RUN cat ~/.aws/credentials
-RUN pywren create-config
-RUN sed -i s/" bucket:.*"/" bucket: `python -c 'import random; print("".join(random.choice("abcdefghijkl") for i in range(30)))'`"/ /home/$NB_USER/.pywren_config
-RUN pywren create-bucket
-RUN pywren create-role
-RUN pywren deploy-lambda
+echo "[default]" > /home/$NB_USER/.aws/credentials
+echo "aws_access_key_id = $AWS_ACCESS_KEY_ID" >> /home/$NB_USER/.aws/credentials
+echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> /home/$NB_USER/.aws/credentials
+cat ~/.aws/credentials
+pywren create-config
+sed -i s/" bucket:.*"/" bucket: pywren.bucket.`echo "$AWS_ACCESS_KEY_ID" | md5sum | cut -f1 -d' '`"/ /home/$NB_USER/.pywren_config
+pywren create-bucket || echo "bucket already created"
+pywren create-role
+pywren deploy-lambda
