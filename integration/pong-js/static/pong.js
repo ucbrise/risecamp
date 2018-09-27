@@ -467,7 +467,7 @@ Pong = {
       //   return Math.random() * 2
       // });
 
-      var features = [this.pong.leftPaddle.y, 0,
+      var features = [this.pong.leftPaddle.y, 
                       ball.x, ball.y,
                       ball.dx, ball.dy,
                       ball.x_prev, ball.y_prev].map(function(x) {
@@ -478,7 +478,7 @@ Pong = {
       var self = this;
 
       // Query Clipper via the Pong server proxy
-      fetch('http://localhost:3000/pong/predict/' + Pong.PredictUrl, {
+      fetch('/pong/predict/' + Pong.PredictUrl, {
         method: 'POST',
         redirect: 'follow',
         headers: new Headers({'Content-Type': 'application/json'}),

@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 PORT = 3000
 
-
 # NOTE: This is definitely not secure
 def in_static_dir(file):
     # make both absolute
@@ -32,7 +31,6 @@ def in_static_dir(file):
     # return true, if the common prefix of both is equal to directory
     # e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
     return os.path.commonprefix([file, directory]) == directory
-
 
 class PongServer(BaseHTTPRequestHandler):
 
@@ -71,11 +69,10 @@ class PongServer(BaseHTTPRequestHandler):
     def do_POST(self):
         if "/pong/predict" in self.path:
             model = self.path.split('/')[-1]
-            print('Model is %s!' % (model))
 
-            clipper_url = "http://{}/pong/predict".format(self.server.clipper_addr)
+            # TODO change the first variable
+            clipper_url = "http://{}/pong-{}/predict".format(self.server.clipper_addr, 'small')
             content_length = int(self.headers['Content-Length'])
-            self.send_header('Access-Control-Allow-Origin', '*')
 
             # Stupid workaround because Javascript's JSON.stringify will turn 1.0 into 1, which
             # Clipper's JSON parsing will parse as an integer not a double
@@ -86,11 +83,13 @@ class PongServer(BaseHTTPRequestHandler):
             headers = {'Content-Type': 'application/json'}
             start = datetime.now()
             clipper_response = requests.post(clipper_url, headers=headers, data=json.dumps(req_json))
+
             end = datetime.now()
             latency = (end - start).total_seconds() * 1000.0
             logger.debug("Clipper responded with '{txt}' in {time} ms".format(
                 txt=clipper_response.text, time=latency))
             self.send_response(clipper_response.status_code)
+
             # Forward headers
             for k, v in clipper_response.headers.iteritems():
                 self.send_header(k, v)
