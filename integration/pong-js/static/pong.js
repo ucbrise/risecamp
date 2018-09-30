@@ -133,7 +133,7 @@ Pong = {
 
       if (Pong.PredictUrl != null) {
         var xhr = new XMLHttpRequest();
-        var victory_url = "http://localhost:3000/victory";
+        var victory_url = "victory/" + Pong.PredictURL;
 
         xhr.open("POST", victory_url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
@@ -462,12 +462,7 @@ Pong = {
     },
 
     ai: function(dt, ball) {
-      // var features = [0.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0];
-      // var features = Array.apply(null, Array(8)).map(function(item, index) {
-      //   return Math.random() * 2
-      // });
-
-      var features = [this.pong.leftPaddle.y, 
+      var features = [this.pong.leftPaddle.y, 0,
                       ball.x, ball.y,
                       ball.dx, ball.dy,
                       ball.x_prev, ball.y_prev].map(function(x) {
