@@ -6,6 +6,7 @@ database = "/var/lib/wave/db"
 # This should ideally be below 1000 to prevent a non root service
 # from binding to this port
 listenIp = "127.0.0.1:1410"
+httpListenIp = "127.0.0.1:6543"
 
 [storage]
   # This is the default HTTPS server until we get AWS/Azure
