@@ -363,7 +363,8 @@ class HomeServer:
                 print("home server received light control with invalid proof: ",resp.error.message)
                 return
             # actuate light state when the light receives a direct message
-            self.light_widget.state = json.loads(payload).get('state') == 'on'
+            ls = json.loads(payload).get('state')
+            self.light_widget.state = (ls == 'on' || ls == True)
             #self.notify("Light changed (remote) to {0}".format('on' if self.light_widget.state else 'off'))
 
         elif msg.topic == self.nickname+"/smarthome/thermostat/control":
