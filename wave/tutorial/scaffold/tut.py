@@ -364,7 +364,7 @@ class HomeServer:
                 return
             # actuate light state when the light receives a direct message
             ls = json.loads(payload).get('state')
-            self.light_widget.state = (ls == 'on' || ls == True)
+            self.light_widget.state = (ls == 'on' or ls == True)
             #self.notify("Light changed (remote) to {0}".format('on' if self.light_widget.state else 'off'))
 
         elif msg.topic == self.nickname+"/smarthome/thermostat/control":
