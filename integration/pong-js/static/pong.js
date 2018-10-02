@@ -133,7 +133,7 @@ Pong = {
 
       if (Pong.PredictUrl != null) {
         var xhr = new XMLHttpRequest();
-        var victory_url = "victory/" + Pong.PredictURL;
+        var victory_url = "victory/" + Pong.PredictUrl;
 
         xhr.open("POST", victory_url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');

@@ -52,6 +52,8 @@ class PongServer(BaseHTTPRequestHandler):
 
         if self.path.startswith("/pong/"):
             self.path = self.path.replace("/pong/", "", 1)
+        if self.path.startswith("/"):
+            self.path = self.path.replace("/", "", 1)
 
         local_path = os.path.abspath(os.path.join(static_dir, self.path))
         logger.info("Local path: {}".format(local_path))
