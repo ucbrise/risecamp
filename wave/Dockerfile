@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base
+FROM ucbjey/risecamp2018-base:2b580e66f1f7
 
 # use apt-get as user "root" to install ubuntu packages
 USER root
@@ -19,3 +19,7 @@ RUN pip install paho-mqtt
 # do this last so that your container builds are as fast as possible
 # when updating the content in tutorial/
 COPY tutorial /home/$NB_USER/
+
+# configure httpd
+USER root
+COPY nginx.conf /etc/nginx/sites-enabled/default

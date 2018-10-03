@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base
+FROM ucbjey/risecamp2018-base:2b580e66f1f7
 
 USER root
 RUN apt-get update
@@ -51,3 +51,7 @@ COPY pong-js /home/$NB_USER/tutorial/pong-js
 USER root
 
 RUN chmod +x /home/$NB_USER/tutorial/start_webserver.sh
+
+# configure httpd
+USER root
+COPY nginx.conf /etc/nginx/sites-enabled/default

@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base
+FROM ucbjey/risecamp2018-base:2b580e66f1f7
 
 USER $NB_USER
 
@@ -13,3 +13,7 @@ RUN pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.5.
 COPY tutorial /home/$NB_USER/ 
 
 RUN pip install /home/$NB_USER/rllib_exercises/serving/pong_py --user
+
+# configure httpd
+USER root
+COPY nginx.conf /etc/nginx/sites-enabled/default
