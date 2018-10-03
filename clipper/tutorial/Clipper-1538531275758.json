@@ -84,7 +84,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_CLIPPER_METRICS}",
+      "datasource": "Clipper Metrics",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -165,7 +165,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_CLIPPER_METRICS}",
+      "datasource": "Clipper Metrics",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -241,7 +241,7 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_CLIPPER_METRICS}",
+      "datasource": "Clipper Metrics",
       "fill": 1,
       "gridPos": {
         "h": 6,
@@ -328,7 +328,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_CLIPPER_METRICS}",
+      "datasource": "Clipper Metrics",
       "description": "",
       "fill": 1,
       "gridPos": {
@@ -414,7 +414,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_CLIPPER_METRICS}",
+      "datasource": "Clipper Metrics",
       "fill": 1,
       "gridPos": {
         "h": 5,
