@@ -54,6 +54,7 @@
       }
     ]
   },
+"dashboard":{
   "editable": true,
   "gnetId": 7904,
   "graphTooltip": 0,
@@ -532,4 +533,5 @@
   "title": "Clipper",
   "uid": "z5uktZTmk",
   "version": 2
+}
 }
