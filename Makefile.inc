@@ -1,17 +1,18 @@
 # vim: filetype=make
 
-NOTEBOOK_AUTH_TOKEN := $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
+CURPROJ ?= $(shell basename $(CURDIR))
 
-CONTAINER_NAME := risecamp_$(shell basename $(CURDIR))
+CONTAINER_AUTH_TOKEN := $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
+CONTAINER_BASE_URL := "camp/$(CURPROJ)"
 
 DOCKER_RUN_FLAGS = \
 	--rm \
-	--name "$(CONTAINER_NAME)" \
-	-p 8888:8888 \
+	--name "risecamp_$(CURPROJ)" \
+	-p 8080:8080 \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
-	-e "NOTEBOOK_AUTH_TOKEN=$(NOTEBOOK_AUTH_TOKEN)" \
-	-e "NOTEBOOK_BASE_URL=$(NOTEBOOK_BASE_URL)" \
+	-e "CONTAINER_AUTH_TOKEN=$(CONTAINER_AUTH_TOKEN)" \
+	-e "CONTAINER_BASE_URL=$(CONTAINER_BASE_URL)" \
 	#
 
 DOCKER_BUILD_FLAGS = \
