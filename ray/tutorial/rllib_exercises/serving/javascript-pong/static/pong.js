@@ -126,8 +126,8 @@ Pong = {
       if(window && window.location) {
           if (window.location.hostname === "localhost") {
                 predict_url = "http://localhost:3000";
-          } else if (window.location.hostname == "community.cloud.databricks.com") {
-              predict_url = "https://community.cloud.databricks.com" + window.location.pathname.replace(new RegExp("[0-9]+/$"), "3000/");
+          } else {
+              predict_url = "http://" + window.location.host + ":3000";
           }
       }
 
