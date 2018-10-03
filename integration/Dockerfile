@@ -51,4 +51,3 @@ COPY pong-js /home/$NB_USER/tutorial/pong-js
 USER root
 
 RUN chmod +x /home/$NB_USER/tutorial/start_webserver.sh
-RUN chown $NB_USER /home/$NB_USER
