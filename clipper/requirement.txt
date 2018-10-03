@@ -1,0 +1,10 @@
+numpy
+scipy
+scikit-learn
+pillow
+jupyterlab
+matplotlib
+git+https://github.com/ucbrise/clipper.git@rehan/pipe_log_stdout#subdirectory=clipper_admin
+torch==0.4.0
+torchvision
+cloudpickle==0.5.3

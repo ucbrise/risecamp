@@ -1,0 +1,18 @@
+FROM clipper/python36-closure-container:0.3
+
+# Install Git
+RUN apt-get update \
+    && apt-get install -y git
+
+# Install cURL
+RUN apt-get install -y curl
+
+# Clone Darknet Repo
+RUN git clone https://github.com/RehanSD/darknet.git /tmp/darknet
+RUN mv /tmp/darknet/* .
+
+# Make Darknet Project
+RUN make -j4
+
+#Download Weights
+RUN curl -o yolov3-tiny.weights https://pjreddie.com/media/files/yolov3-tiny.weights
