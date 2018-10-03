@@ -9,6 +9,8 @@ from datetime import datetime
 import logging
 import json
 import sys
+import _mysql
+
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(cur_dir, "static")
 
@@ -50,6 +52,8 @@ class PongServer(BaseHTTPRequestHandler):
 
         if self.path.startswith("/pong/"):
             self.path = self.path.replace("/pong/", "", 1)
+        if self.path.startswith("/"):
+            self.path = self.path.replace("/", "", 1)
 
         local_path = os.path.abspath(os.path.join(static_dir, self.path))
         logger.info("Local path: {}".format(local_path))
@@ -69,9 +73,7 @@ class PongServer(BaseHTTPRequestHandler):
     def do_POST(self):
         if "/pong/predict" in self.path:
             model = self.path.split('/')[-1]
-
-            # TODO change the first variable
-            clipper_url = "http://{}/pong-{}/predict".format(self.server.clipper_addr, 'small')
+            clipper_url = "http://{}/pong-{}/predict".format(self.server.clipper_addr, model)
             content_length = int(self.headers['Content-Length'])
 
             # Stupid workaround because Javascript's JSON.stringify will turn 1.0 into 1, which
@@ -95,14 +97,17 @@ class PongServer(BaseHTTPRequestHandler):
                 self.send_header(k, v)
             self.end_headers()
             self.wfile.write(clipper_response.text)
-        elif self.path == "/victory":
-            self.send_header('Access-Control-Allow-Origin', '*')
+        elif "/victory" in self.path:
+            model = self.path.split('/')[-1]
             content_length = int(self.headers['Content-Length'])
             req_json = json.loads(self.rfile.read(content_length))
 
             print(req_json)
 
-            # TODO: write this to a shared database
+            c = _mysql.connect(host='risecamp-integration.ce3rlnajlapb.us-east-1.rds.amazonaws.com',
+                    user='risecamp', passwd='risecamp', db='risecamp')
+            c.query('insert into results VALUES(\"%s\", %d, %d)' % (model,
+                req_json[model], req_json['human']))
         else:
             self.send_error(404, "Not Found")
             return

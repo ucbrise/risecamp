@@ -4,6 +4,7 @@ import grpc
 import cloudpickle
 from clipper_admin.deployers import python as py_deployer
 from .clipper_rllib_deployer import deploy_rllib_model
+from ray.rllib.agents import ppo
 
 def auth_deploy_rllib_model(
     clipper_conn,
@@ -13,7 +14,9 @@ def auth_deploy_rllib_model(
     recipient_entity,
     ciphertext,
     version=1,
-    input_type="doubles"
+    input_type="doubles",
+    klass=ppo.PPOAgent,
+    ppo_env="pong_env"
 ):
     '''Deploy a Python function with a RLlib model.
 
@@ -44,23 +47,21 @@ def auth_deploy_rllib_model(
     if decrypt_response.error.code != 0:
         raise Exception("Incorrect authentication")
 
-    trainer = cloudpickle.loads(decrypt_response.content)
+    agent = klass(env=ppo_env, config={'env_config': {}})
+    agent.restore_from_object(decrypt_response.content)
 
-    rllib_deployer.deploy_rllib_model(
+    deploy_rllib_model(
         clipper_conn,
         name=model_name,
         version=version,
         input_type=input_type,
         func=func,
-        trainer=trainer
+        trainer=agent
     )
-
-
 
 def auth_deploy_python_model(
     clipper_conn,
     model_name,
-    func,
     wave_obj,
     recipient_entity,
     ciphertext,
