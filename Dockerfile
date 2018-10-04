@@ -62,6 +62,8 @@ RUN bash /opt/install-web3d.sh
 
 RUN mkdir -p /home/$NB_USER
 COPY ray /home/$NB_USER/
+RUN mkdir -p /home/$NB_USER/tutorial
+COPY ray/examples /home/$NB_USER/tutorial/examples
 
 # Install pong_py (for the pong exercise).
 RUN pip install /home/$NB_USER/utilities/pong_py
