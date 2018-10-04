@@ -46,6 +46,35 @@ def load_data(limit_threads=4, generator=True, iter_limit=200):
     return x_train, x_test, y_train, y_test
 
 
+def get_best_trial(trial_list, metric):
+    """Retrieve the best trial."""
+    return max(trial_list, key=lambda trial: trial.last_result.get(metric, 0))
+
+
+def get_best_result(trial_list, metric):
+    """Retrieve the last result from the best trial."""
+    return get_best_trial(trial_list, metric).last_result
+
+
+def get_best_model_trainable(trainable, trial_list, metric):
+    """Restore a model from the best trial given a trainable."""
+    best_trial = get_best_trial(trial_list, metric)
+    trainable = trainable(best_trial.config)
+    assert best_trial.has_checkpoint()
+    trainable.restore(best_trial._checkpoint.value)
+    return trainable.model
+
+
+def get_best_model(model_creator, trial_list, metric, suffix="./weights_tune.h5"):
+    """Restore a model from the best trial."""
+    best_trial = get_best_trial(trial_list, metric)
+    model = model_creator(best_trial.config)
+    model.load_weights(os.path.join(best_trial.localdir, suffix))
+    return model
+
+def prepare_data(data):
+    return np.array(data).reshape((1, 28, 28, 1))
+
 class TuneCallback(keras.callbacks.Callback):
     def __init__(self, reporter, logs={}):
         self.reporter = reporter
@@ -55,3 +84,6 @@ class TuneCallback(keras.callbacks.Callback):
 
     def on_batch_end(self, batch, logs={}):
         self.reporter(mean_accuracy=logs["acc"])
+
+        
+        
