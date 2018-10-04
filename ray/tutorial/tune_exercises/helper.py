@@ -6,6 +6,11 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 import itertools
 
+import logging
+import sys
+logging.basicConfig(stream=sys.stdout)
+
+
 def load_data(limit_threads=4, generator=True, iter_limit=200):
     if limit_threads:
         K.set_session(
@@ -91,5 +96,27 @@ class TuneCallback(keras.callbacks.Callback):
     def on_batch_end(self, batch, logs={}):
         self.reporter(mean_accuracy=logs["acc"])
 
+       
+class GoodError(Exception): 
+    pass
 
-
+def test_reporter(train_mnist_tune):
+    def mock_reporter(**kwargs):
+        assert "mean_accuracy" in kwargs, "Did not report proper metric"
+        assert isinstance(kwargs["mean_accuracy"], float), (
+            "Did not report properly. Need to report a float!")
+        raise GoodError("This works.")
+    try:
+        train_mnist_tune({}, mock_reporter)
+    except TypeError as e:
+        print("Forgot to modify function signature?")
+        raise e
+    except GoodError:
+        print("Works!")
+        return 1
+    raise Exception("Didn't call reporter...")
+    
+def evaluate(model):
+    validation_data, validation_labels = load_validation()
+    res = model.evaluate(validation_data, validation_labels)
+    print("Model evaluation results:", dict(zip(model.metric_names, res)))
