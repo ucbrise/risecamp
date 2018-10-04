@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import keras
 from keras.datasets import mnist
 from keras.preprocessing.image import ImageDataGenerator
@@ -65,11 +66,11 @@ def get_best_model_trainable(trainable, trial_list, metric):
     return trainable.model
 
 
-def get_best_model(model_creator, trial_list, metric, suffix="./weights_tune.h5"):
+def get_best_model(model_creator, trial_list, metric, suffix="weights_tune.h5"):
     """Restore a model from the best trial."""
     best_trial = get_best_trial(trial_list, metric)
     model = model_creator(best_trial.config)
-    model.load_weights(os.path.join(best_trial.localdir, suffix))
+    model.load_weights(os.path.join(best_trial.logdir, suffix))
     return model
 
 def prepare_data(data):
@@ -85,5 +86,5 @@ class TuneCallback(keras.callbacks.Callback):
     def on_batch_end(self, batch, logs={}):
         self.reporter(mean_accuracy=logs["acc"])
 
-        
-        
+
+
