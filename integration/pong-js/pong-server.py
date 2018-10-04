@@ -47,6 +47,11 @@ class PongServer(BaseHTTPRequestHandler):
 
     # GET requests serve the corresponding file from the "static/" subdirectory
     def do_GET(self):
+        if "/camp/integration/" not in self.path:
+            self.send_error(403, "Forbidden")
+        else:
+            self.path = self.path.replace("/camp/integration/", "", 1)
+
         if self.path == "/pong" or self.path == "/pong/":
             self.path = "/pong/index.html"
 

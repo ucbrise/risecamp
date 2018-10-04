@@ -1,0 +1,26 @@
+body {
+  background-color: #DBDADA;
+  font-family: helvetica;
+  width: 100%;
+}
+
+.center {
+  margin: auto;
+  width: 50%;
+  padding: 10px;
+  text-align: center
+}
+
+legend {
+  width: 25%;
+  margin: auto;
+}
+
+h1 {
+  float: center;
+  font-size: 45pt;
+}
+
+canvas {
+  color: black;
+}

@@ -49,9 +49,8 @@ COPY start_webserver.sh /home/$NB_USER/tutorial
 COPY pong-js /home/$NB_USER/tutorial/pong-js
 
 USER root
-
 RUN chmod +x /home/$NB_USER/tutorial/start_webserver.sh
 
 # configure httpd
-USER root
 COPY nginx.conf /etc/nginx/sites-enabled/default
+
