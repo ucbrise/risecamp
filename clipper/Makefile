@@ -5,4 +5,4 @@ include ../Makefile.inc
 DOCKER_RUN_FLAGS += --network host -v /tmp:/tmp -e NOTEBOOK_BASE_URL=/camp/clipper/jupyter
 
 # This is Simon Mo <xmo@berkeley.edu>'s dockerhub
-DOCKER_TAG = simonmok/risecamp2018-clipper
+DOCKER_TAG ?= simonmok/risecamp2018-clipper
