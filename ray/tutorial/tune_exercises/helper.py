@@ -46,6 +46,9 @@ def load_data(limit_threads=4, generator=True, iter_limit=200):
         return itertools.islice(datagen.flow(x_train, y_train), iter_limit)
     return x_train, x_test, y_train, y_test
 
+def load_validation():
+    _, val_data, _, val_labels = load_data(limit_threads=False, generator=False)
+    return val_data, val_labels
 
 def get_best_trial(trial_list, metric):
     """Retrieve the best trial."""
@@ -54,7 +57,7 @@ def get_best_trial(trial_list, metric):
 
 def get_best_result(trial_list, metric):
     """Retrieve the last result from the best trial."""
-    return get_best_trial(trial_list, metric).last_result
+    return {metric: get_best_trial(trial_list, metric).last_result[metric]}
 
 
 def get_best_model_trainable(trainable, trial_list, metric):
@@ -70,7 +73,9 @@ def get_best_model(model_creator, trial_list, metric, suffix="weights_tune.h5"):
     """Restore a model from the best trial."""
     best_trial = get_best_trial(trial_list, metric)
     model = model_creator(best_trial.config)
-    model.load_weights(os.path.join(best_trial.logdir, suffix))
+    weights = os.path.join(best_trial.logdir, suffix)
+    print("Loading from", weights)
+    model.load_weights(weights)
     return model
 
 def prepare_data(data):
