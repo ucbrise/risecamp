@@ -16,11 +16,29 @@ from IPython.display import display
 # a permission set is a random indentifier, there is nothing special about this
 smarthome_pset = bytes("GyAa3XjbDc-S_YoGCW-jXvX5qSmi_BexVDiFE0AdnpbkmA==", "utf8")
 
+def check_I_pasted_correctly():
+    global partner_nickname
+    global partner_entity_hash
+    global partner_home_namespace
+    global homeserver
+    global entity
+    if partner_nickname == "paste the nickname here":
+        raise Exception("You forgot to paste your partner's nickname")
+    if partner_nickname == my_unique_nickname:
+        raise Exception("You pasted your own nickname, not your partner's")
+    if partner_entity_hash == entity.hash:
+        raise Exception("You pasted your own entity hash, not your partner's")
+    if partner_home_namespace == homeserver.namespace:
+        raise Exception("You pasted your own namespace, not your partner's")
 
 # some utility functions
 def hashToBase64(hash):
     return str(base64.b64encode(hash), "utf8")
 def hashFromBase64(b64):
+    if b64 == "paste the entity hash here":
+        raise Exception("You forgot to paste the entity hash")
+    if b64 == "paste the namespace here":
+        raise Exception("You forgot to paste the namespace hash")
     return base64.b64decode(b64)
 
 # TODO add proper expiries to all the attestations. Default might be unsuitable
