@@ -17,8 +17,14 @@ def limit_threads(num_threads):
                 intra_op_parallelism_threads=num_threads,
                 inter_op_parallelism_threads=num_threads)))
 
+def shuffled(x, y):
+    idx = np.r_[:x.shape[0]]
+    np.random.shuffle(idx)
+    return x[idx], y[idx]
+ 
 
-def load_data(generator=True, iter_limit=200):
+
+def load_data(generator=True, iter_limit=100):
     num_classes = 10
 
     # input image dimensions
@@ -43,7 +49,8 @@ def load_data(generator=True, iter_limit=200):
     print('x_train shape:', x_train.shape)
     print(x_train.shape[0], 'train samples')
     print(x_test.shape[0], 'test samples')
-    
+    x_train, y_train = shuffled(x_train, y_train)
+    x_test, y_test = shuffled(x_test, y_test)
 
     # convert class vectors to binary class matrices
     y_train = keras.utils.to_categorical(y_train, num_classes)
@@ -53,9 +60,6 @@ def load_data(generator=True, iter_limit=200):
         return itertools.islice(datagen.flow(x_train, y_train), iter_limit)
     return x_train, x_test, y_train, y_test
 
-def load_validation():
-    _, val_data, _, val_labels = load_data(generator=False)
-    return val_data, val_labels
 
 def get_best_trial(trial_list, metric):
     """Retrieve the best trial."""
@@ -119,7 +123,10 @@ def test_reporter(train_mnist_tune):
         return 1
     raise Exception("Didn't call reporter...")
     
-def evaluate(model):
-    validation_data, validation_labels = load_validation()
-    res = model.evaluate(validation_data, validation_labels)
+def evaluate(model, validation=True):
+    train_data, val_data, train_labels, val_labels = load_data(generator=False)
+    data = val_data if validation else train_data
+    labels = val_labels if validation else train_labels
+
+    res = model.evaluate(data, labels)
     print("Model evaluation results:", dict(zip(model.metrics_names, res)))
