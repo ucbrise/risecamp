@@ -34,6 +34,9 @@ build:
 clean-build:
 	docker build --no-cache --pull $(DOCKER_BUILD_FLAGS) .
 
-.PHONY: run
-run: build
+.PHONY: run-only
+run-only:
 	docker run -it --user=root $(DOCKER_RUN_FLAGS) "$(DOCKER_TAG)"
+
+.PHONY: run
+run: build run-only
