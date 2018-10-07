@@ -8,16 +8,17 @@ import itertools
 
 import logging
 import sys
-logging.basicConfig(stream=sys.stdout)
+# logging.basicConfig(stream=sys.stdout)
+
+def limit_threads(num_threads):
+    K.set_session(
+        K.tf.Session(
+            config=K.tf.ConfigProto(
+                intra_op_parallelism_threads=num_threads,
+                inter_op_parallelism_threads=num_threads)))
 
 
-def load_data(limit_threads=4, generator=True, iter_limit=200):
-    if limit_threads:
-        K.set_session(
-            K.tf.Session(
-                config=K.tf.ConfigProto(
-                    intra_op_parallelism_threads=limit_threads,
-                    inter_op_parallelism_threads=limit_threads)))
+def load_data(generator=True, iter_limit=200):
     num_classes = 10
 
     # input image dimensions
@@ -42,6 +43,7 @@ def load_data(limit_threads=4, generator=True, iter_limit=200):
     print('x_train shape:', x_train.shape)
     print(x_train.shape[0], 'train samples')
     print(x_test.shape[0], 'test samples')
+    
 
     # convert class vectors to binary class matrices
     y_train = keras.utils.to_categorical(y_train, num_classes)
@@ -52,7 +54,7 @@ def load_data(limit_threads=4, generator=True, iter_limit=200):
     return x_train, x_test, y_train, y_test
 
 def load_validation():
-    _, val_data, _, val_labels = load_data(limit_threads=False, generator=False)
+    _, val_data, _, val_labels = load_data(generator=False)
     return val_data, val_labels
 
 def get_best_trial(trial_list, metric):
@@ -84,7 +86,7 @@ def get_best_model(model_creator, trial_list, metric, suffix="weights_tune.h5"):
     return model
 
 def prepare_data(data):
-    return np.array(data).reshape((1, 28, 28, 1))
+    return np.array(data).reshape((1, 28, 28, 1)).astype(np.float32)
 
 class TuneCallback(keras.callbacks.Callback):
     def __init__(self, reporter, logs={}):
@@ -99,6 +101,7 @@ class TuneCallback(keras.callbacks.Callback):
        
 class GoodError(Exception): 
     pass
+
 
 def test_reporter(train_mnist_tune):
     def mock_reporter(**kwargs):
@@ -119,4 +122,4 @@ def test_reporter(train_mnist_tune):
 def evaluate(model):
     validation_data, validation_labels = load_validation()
     res = model.evaluate(validation_data, validation_labels)
-    print("Model evaluation results:", dict(zip(model.metric_names, res)))
+    print("Model evaluation results:", dict(zip(model.metrics_names, res)))
