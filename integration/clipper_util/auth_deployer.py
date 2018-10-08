@@ -13,6 +13,7 @@ def auth_deploy_rllib_model(
     wave_obj,
     recipient_entity,
     ciphertext,
+    rayConfig,
     version=1,
     input_type="doubles",
     klass=ppo.PPOAgent,
@@ -47,7 +48,7 @@ def auth_deploy_rllib_model(
     if decrypt_response.error.code != 0:
         raise Exception("Incorrect authentication")
 
-    agent = klass(env=ppo_env, config={'env_config': {}})
+    agent = klass(env=ppo_env, config=rayConfig)
     agent.restore_from_object(decrypt_response.content)
 
     deploy_rllib_model(

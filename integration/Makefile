@@ -1,3 +1,3 @@
 include ../Makefile.inc
 
-DOCKER_TAG = vsreekanti/integration-risecamp18
+DOCKER_TAG ?= vsreekanti/integration-risecamp18

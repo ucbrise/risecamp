@@ -33,6 +33,7 @@ RUN /bin/bash -c "source activate pong_py2 && \
 # Python library support
 ENV LIBPATH /home/$NB_USER/libraries
 
+WORKDIR /tmp
 WORKDIR /home/$NB_USER
 RUN git clone https://github.com/ucbrise/flor $LIBPATH/flor
 RUN git clone https://github.com/ground-context/grit $LIBPATH/grit

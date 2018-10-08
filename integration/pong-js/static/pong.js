@@ -473,7 +473,7 @@ Pong = {
       var self = this;
 
       // Query Clipper via the Pong server proxy
-      fetch('/pong/predict/' + Pong.PredictUrl, {
+      fetch('/camp/integration/pong/predict/' + Pong.PredictUrl, {
         method: 'POST',
         redirect: 'follow',
         headers: new Headers({'Content-Type': 'application/json'}),

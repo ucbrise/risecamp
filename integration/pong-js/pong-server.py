@@ -47,18 +47,11 @@ class PongServer(BaseHTTPRequestHandler):
 
     # GET requests serve the corresponding file from the "static/" subdirectory
     def do_GET(self):
-        if "/camp/integration/" not in self.path:
-            self.send_error(403, "Forbidden")
-        else:
-            self.path = self.path.replace("/camp/integration/", "", 1)
+        if self.path[0] == "/":
+            self.path = self.path[1:]
 
-        if self.path == "/pong" or self.path == "/pong/":
-            self.path = "/pong/index.html"
-
-        if self.path.startswith("/pong/"):
-            self.path = self.path.replace("/pong/", "", 1)
-        if self.path.startswith("/"):
-            self.path = self.path.replace("/", "", 1)
+        if self.path == "":
+            self.path = "index.html"
 
         local_path = os.path.abspath(os.path.join(static_dir, self.path))
         logger.info("Local path: {}".format(local_path))
@@ -76,7 +69,7 @@ class PongServer(BaseHTTPRequestHandler):
                 return
 
     def do_POST(self):
-        if "/pong/predict" in self.path:
+        if "/predict" in self.path:
             model = self.path.split('/')[-1]
             clipper_url = "http://{}/pong-{}/predict".format(self.server.clipper_addr, model)
             content_length = int(self.headers['Content-Length'])
@@ -113,6 +106,9 @@ class PongServer(BaseHTTPRequestHandler):
                     user='risecamp', passwd='risecamp', db='risecamp')
             c.query('insert into results VALUES(\"%s\", %d, %d)' % (model,
                 req_json[model], req_json['human']))
+
+            self.send_response(200)
+            self.end_headers()
         else:
             self.send_error(404, "Not Found")
             return
