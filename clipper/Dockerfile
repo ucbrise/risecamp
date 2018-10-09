@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base:2b580e66f1f7
+FROM ucbjey/risecamp2018-base:latest
 
 USER root
 
