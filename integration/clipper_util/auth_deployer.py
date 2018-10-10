@@ -5,6 +5,9 @@ import cloudpickle
 from clipper_admin.deployers import python as py_deployer
 from .clipper_rllib_deployer import deploy_rllib_model
 from ray.rllib.agents import ppo
+import tarfile
+import io
+import shutil
 
 def auth_deploy_rllib_model(
     clipper_conn,
@@ -13,7 +16,7 @@ def auth_deploy_rllib_model(
     wave_obj,
     recipient_entity,
     ciphertext,
-    rayConfig,
+    checkpoint_file,
     version=1,
     input_type="doubles",
     klass=ppo.PPOAgent,
@@ -48,8 +51,12 @@ def auth_deploy_rllib_model(
     if decrypt_response.error.code != 0:
         raise Exception("Incorrect authentication")
 
-    agent = klass(env=ppo_env, config=rayConfig)
-    agent.restore_from_object(decrypt_response.content)
+    decrypt_path = "/tmp/model_dir/"
+    decryptedmodel = io.BytesIO(decrypt_response.content)
+
+    with tarfile.open(fileobj=decryptedmodel, mode="r:gz") as tar:
+        tar.extractall(path=decrypt_path)
+        decrypt_path += tar.getnames()[0]
 
     deploy_rllib_model(
         clipper_conn,
@@ -57,8 +64,11 @@ def auth_deploy_rllib_model(
         version=version,
         input_type=input_type,
         func=func,
-        trainer=agent
+        model_dir=decrypt_path,
+        checkpoint_file=checkpoint_file
     )
+
+    shutil.rmtree(decrypt_path)
 
 def auth_deploy_python_model(
     clipper_conn,

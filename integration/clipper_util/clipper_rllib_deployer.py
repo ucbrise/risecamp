@@ -104,7 +104,8 @@ def deploy_rllib_model(clipper_conn,
                          version,
                          input_type,
                          func,
-                         trainer,
+                         model_dir,
+                         checkpoint_file,
                          base_image="default",
                          labels=None,
                          registry=None,
@@ -184,18 +185,13 @@ def deploy_rllib_model(clipper_conn,
             func=predict,
             pytorch_model=model)
     """
-
+    __registry__ = 'hsubbaraj'
     serialization_dir = save_python_function(name, func)
 
-    __registry__ = 'hsubbaraj'
-
     try:
-        checkpoint_path = trainer.save()
-        checkpoint_dir = os.path.dirname(checkpoint_path)
-        checkpoint_file = os.path.basename(checkpoint_path)
-        with open(os.path.join(checkpoint_dir, "metadata.json"), "w") as f:
+        with open(os.path.join(model_dir, "metadata.json"), "w") as f:
             json.dump({"checkpoint": checkpoint_file}, f)
-        shutil.copytree(checkpoint_dir, os.path.join(serialization_dir, 'checkpoint'))
+        shutil.copytree(model_dir, os.path.join(serialization_dir, 'checkpoint'))
 
         logger.info("RLlib model saved")
 
@@ -227,7 +223,7 @@ def deploy_rllib_model(clipper_conn,
                 raise ClipperException(msg)
 
         # Deploy model
-        base_image = "hsubbaraj/rllib36-container:develop"
+        base_image = "vsreekanti/rllib36-container:latest"
         clipper_conn.build_and_deploy_model(
             name, version, input_type, serialization_dir, base_image, labels,
             registry, num_replicas, batch_size, pkgs_to_install)
