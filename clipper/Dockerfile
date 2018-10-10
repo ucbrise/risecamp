@@ -17,4 +17,4 @@ COPY tutorial /home/$NB_USER/
 # configure httpd
 USER root
 COPY clipper-init.sh /usr/local/bin/start-notebook.d
-COPY nginx.conf /tmp/clipper.nginx.conf
+COPY nginx.conf /home/clipper.nginx.conf
