@@ -5,6 +5,6 @@ pillow
 jupyterlab
 matplotlib
 git+https://github.com/ucbrise/clipper.git@rehan/pipe_log_stdout#subdirectory=clipper_admin
-torch==0.4.0
+http://download.pytorch.org/whl/cpu/torch-0.4.0-cp36-cp36m-linux_x86_64.whl
 torchvision
 cloudpickle==0.5.3

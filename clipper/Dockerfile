@@ -1,4 +1,4 @@
-FROM ucbjey/risecamp2018-base:2b580e66f1f7
+FROM ucbjey/risecamp2018-base:latest
 
 USER root
 
@@ -16,4 +16,5 @@ COPY tutorial /home/$NB_USER/
 
 # configure httpd
 USER root
-COPY nginx.conf /etc/nginx/sites-enabled/default
+COPY clipper-init.sh /usr/local/bin/start-notebook.d
+COPY nginx.conf /home/clipper.nginx.conf
