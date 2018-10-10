@@ -21,8 +21,10 @@ RUN pip install tensorflow==1.7.0 && \
     pip install gitpython && \
     pip install tqdm && \
     pip install lz4 && \
-    pip install ray==0.5.2 && \
-    pip install clipper_admin 
+    pip install ray==0.5.2
+
+# pip install clipper from a branch
+RUN pip install git+https://github.com/ucbrise/clipper.git@rehan/pipe_log_stdout#subdirectory=clipper_admin
 
 # conda install in python2 for pong env
 RUN conda create -n pong_py2 python=2 jupyter
