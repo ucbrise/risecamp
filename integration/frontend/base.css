@@ -1,14 +1,14 @@
 body {
   background-color: #DBDADA;
   font-family: helvetica;
-  width: 100%;
+  width: 98%;
 }
 
 .center {
   margin: auto;
   width: 50%;
   padding: 10px;
-  text-align: center
+  text-align: center;
 }
 
 legend {

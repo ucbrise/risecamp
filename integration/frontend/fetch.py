@@ -18,7 +18,6 @@ class PongResultsHandler(BaseHTTPRequestHandler):
 
         c.close()
 
-
         self.send_response(200, 'ok')
 
         self.send_header('content-type', 'application/json')
