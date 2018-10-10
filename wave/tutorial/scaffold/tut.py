@@ -16,19 +16,14 @@ from IPython.display import display
 # a permission set is a random indentifier, there is nothing special about this
 smarthome_pset = bytes("GyAa3XjbDc-S_YoGCW-jXvX5qSmi_BexVDiFE0AdnpbkmA==", "utf8")
 
-def check_I_pasted_correctly():
-    global partner_nickname
-    global partner_entity_hash
-    global partner_home_namespace
-    global homeserver
-    global entity
-    if partner_nickname == "paste the nickname here":
+def check_I_pasted_correctly(vars):
+    if vars["partner_nickname"] == "paste the nickname here":
         raise Exception("You forgot to paste your partner's nickname")
-    if partner_nickname == my_unique_nickname:
+    if vars["partner_nickname"] == vars["my_unique_nickname"]:
         raise Exception("You pasted your own nickname, not your partner's")
-    if partner_entity_hash == entity.hash:
+    if vars["partner_entity_hash"] == vars["entity"].hash:
         raise Exception("You pasted your own entity hash, not your partner's")
-    if partner_home_namespace == homeserver.namespace:
+    if vars["partner_home_namespace"] == vars["homeserver"].namespace():
         raise Exception("You pasted your own namespace, not your partner's")
 
 # some utility functions

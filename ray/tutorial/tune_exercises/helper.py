@@ -8,16 +8,23 @@ import itertools
 
 import logging
 import sys
-logging.basicConfig(stream=sys.stdout)
+# logging.basicConfig(stream=sys.stdout)
+
+def limit_threads(num_threads):
+    K.set_session(
+        K.tf.Session(
+            config=K.tf.ConfigProto(
+                intra_op_parallelism_threads=num_threads,
+                inter_op_parallelism_threads=num_threads)))
+
+def shuffled(x, y):
+    idx = np.r_[:x.shape[0]]
+    np.random.shuffle(idx)
+    return x[idx], y[idx]
+ 
 
 
-def load_data(limit_threads=4, generator=True, iter_limit=200):
-    if limit_threads:
-        K.set_session(
-            K.tf.Session(
-                config=K.tf.ConfigProto(
-                    intra_op_parallelism_threads=limit_threads,
-                    inter_op_parallelism_threads=limit_threads)))
+def load_data(generator=True, iter_limit=100):
     num_classes = 10
 
     # input image dimensions
@@ -42,6 +49,8 @@ def load_data(limit_threads=4, generator=True, iter_limit=200):
     print('x_train shape:', x_train.shape)
     print(x_train.shape[0], 'train samples')
     print(x_test.shape[0], 'test samples')
+    x_train, y_train = shuffled(x_train, y_train)
+    x_test, y_test = shuffled(x_test, y_test)
 
     # convert class vectors to binary class matrices
     y_train = keras.utils.to_categorical(y_train, num_classes)
@@ -51,9 +60,6 @@ def load_data(limit_threads=4, generator=True, iter_limit=200):
         return itertools.islice(datagen.flow(x_train, y_train), iter_limit)
     return x_train, x_test, y_train, y_test
 
-def load_validation():
-    _, val_data, _, val_labels = load_data(limit_threads=False, generator=False)
-    return val_data, val_labels
 
 def get_best_trial(trial_list, metric):
     """Retrieve the best trial."""
@@ -84,7 +90,7 @@ def get_best_model(model_creator, trial_list, metric, suffix="weights_tune.h5"):
     return model
 
 def prepare_data(data):
-    return np.array(data).reshape((1, 28, 28, 1))
+    return np.array(data).reshape((1, 28, 28, 1)).astype(np.float32)
 
 class TuneCallback(keras.callbacks.Callback):
     def __init__(self, reporter, logs={}):
@@ -99,6 +105,7 @@ class TuneCallback(keras.callbacks.Callback):
        
 class GoodError(Exception): 
     pass
+
 
 def test_reporter(train_mnist_tune):
     def mock_reporter(**kwargs):
@@ -116,7 +123,10 @@ def test_reporter(train_mnist_tune):
         return 1
     raise Exception("Didn't call reporter...")
     
-def evaluate(model):
-    validation_data, validation_labels = load_validation()
-    res = model.evaluate(validation_data, validation_labels)
-    print("Model evaluation results:", dict(zip(model.metric_names, res)))
+def evaluate(model, validation=True):
+    train_data, val_data, train_labels, val_labels = load_data(generator=False)
+    data = val_data if validation else train_data
+    labels = val_labels if validation else train_labels
+
+    res = model.evaluate(data, labels)
+    print("Model evaluation results:", dict(zip(model.metrics_names, res)))
