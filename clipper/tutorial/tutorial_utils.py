@@ -1,6 +1,10 @@
 import PIL
 import numpy as np
 import io
+import requests
+import json
+import base64
+from pprint import pprint
 
 def _add_noise_to_img(img_bytes):
     """A helper method to add noise to image"""
@@ -45,7 +49,7 @@ def plot_bbox(im_name, output_string, download=False):
     plt.title("Prediction result for image: {}".format(im_name))
     fig.legend()
 
-def predict_and_plot(im_name):
+def predict_and_plot(im_name, clipper_addr):
     """Make a prediction and plot image with bbox"""
     url = "http://%s/darknet-app/predict" % clipper_addr
     req_json = json.dumps({
@@ -54,10 +58,10 @@ def predict_and_plot(im_name):
     })
     headers = {'Content-type': 'application/json'}
     r = requests.post(url, headers=headers, data=req_json)
-    print(r.json())
+    pprint(r.json())
     plot_bbox(im_name, r.json()['output'])
 
-def predict_and_plot_url(im_url):
+def predict_and_plot_url(im_url, clipper_addr):
     """Make a prediction and plot image (downloaded from im_url) with bbox"""
     url = "http://%s/darknet-app/predict" % clipper_addr
     req_json = json.dumps({
@@ -66,12 +70,12 @@ def predict_and_plot_url(im_url):
     })
     headers = {'Content-type': 'application/json'}
     r = requests.post(url, headers=headers, data=req_json)
-    print(r.json())
+    pprint(r.json())
     plot_bbox(im_url, r.json()['output'], download=True)
 
-def setup_grafana():
+def setup_grafana(grafana_url, metric_addr):
     # 1. Perform Auth
-    response = requests.post('http://admin:admin@clipper-grafana:3000/api/auth/keys', 
+    response = requests.post(f'http://admin:admin@{grafana_url}/api/auth/keys', 
                             data=json.dumps({"Role": "Admin", "Name":"new_api_key"}),
                             headers={"Content-type": "application/json"})
     if not response.ok:
@@ -82,11 +86,11 @@ def setup_grafana():
     data_source_body = json.dumps({
         "name":"Clipper Metrics",
         "type":"prometheus",
-        "url":"http://localhost:9090",
+        "url":f"http://{metric_addr}",
         "access":"proxy"
     })
 
-    response = requests.post('http://clipper-grafana:3000/api/datasources',
+    response = requests.post(f'http://{grafana_url}/api/datasources',
                              data=data_source_body,
                              headers={"Content-type": "application/json", 
                                      "Accept": "application/json",
@@ -98,10 +102,11 @@ def setup_grafana():
     with open('Clipper-Dashboard.json', 'r') as myfile:
         dashboard_source_body=myfile.read()
 
-    response = requests.post('http://%s:3000/api/dashboards/db' % (this_ip),
+    response = requests.post(f'http://{grafana_url}/api/dashboards/db',
                             data=dashboard_source_body,
                             headers={"Content-type": "application/json", 
                                      "Accept": "application/json",
                                      "Authorization": "Bearer %s" % (key)})
     if not response.ok:
         print("Request to add Dashboard failed:", response.json()[0]['message'])
+    return response.json()['url']
