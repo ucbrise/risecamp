@@ -16,11 +16,24 @@ from IPython.display import display
 # a permission set is a random indentifier, there is nothing special about this
 smarthome_pset = bytes("GyAa3XjbDc-S_YoGCW-jXvX5qSmi_BexVDiFE0AdnpbkmA==", "utf8")
 
+def check_I_pasted_correctly(vars):
+    if vars["partner_nickname"] == "paste the nickname here":
+        raise Exception("You forgot to paste your partner's nickname")
+    if vars["partner_nickname"] == vars["my_unique_nickname"]:
+        raise Exception("You pasted your own nickname, not your partner's")
+    if vars["partner_entity_hash"] == vars["entity"].hash:
+        raise Exception("You pasted your own entity hash, not your partner's")
+    if vars["partner_home_namespace"] == vars["homeserver"].namespace():
+        raise Exception("You pasted your own namespace, not your partner's")
 
 # some utility functions
 def hashToBase64(hash):
     return str(base64.b64encode(hash), "utf8")
 def hashFromBase64(b64):
+    if b64 == "paste the entity hash here":
+        raise Exception("You forgot to paste the entity hash")
+    if b64 == "paste the namespace here":
+        raise Exception("You forgot to paste the namespace hash")
     return base64.b64decode(b64)
 
 # TODO add proper expiries to all the attestations. Default might be unsuitable
@@ -363,7 +376,8 @@ class HomeServer:
                 print("home server received light control with invalid proof: ",resp.error.message)
                 return
             # actuate light state when the light receives a direct message
-            self.light_widget.state = json.loads(payload).get('state') == 'on'
+            ls = json.loads(payload).get('state')
+            self.light_widget.state = (ls == 'on' or ls == True)
             #self.notify("Light changed (remote) to {0}".format('on' if self.light_widget.state else 'off'))
 
         elif msg.topic == self.nickname+"/smarthome/thermostat/control":

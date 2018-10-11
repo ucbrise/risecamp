@@ -227,6 +227,7 @@ def deploy_rllib_model(clipper_conn,
                 raise ClipperException(msg)
 
         # Deploy model
+        base_image = "hsubbaraj/rllib36-container:develop"
         clipper_conn.build_and_deploy_model(
             name, version, input_type, serialization_dir, base_image, labels,
             registry, num_replicas, batch_size, pkgs_to_install)

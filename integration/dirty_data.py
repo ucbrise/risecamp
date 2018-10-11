@@ -2,8 +2,13 @@
 
 import pandas as pd
 import random
+import sys
 
-df = pd.read_csv('imitation_data.csv')
+if len(sys.argv) < 3:
+    print('Usage: python3 dirty_data.py input-file output-file')
+    sys.exit(1)
+
+df = pd.read_csv(sys.argv[1])
 new_df = pd.DataFrame(columns=df.columns)
 
 ni = 0
@@ -19,4 +24,4 @@ for i in range(len(df)):
 
         ni += 1
 
-new_df.to_csv('dirty_imitation.csv')
+new_df.to_csv(sys.argv[2])
