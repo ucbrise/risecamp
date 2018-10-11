@@ -1,5 +1,7 @@
 import numpy as np
 import os
+import scipy.ndimage as ndimage
+
 import keras
 from keras.datasets import mnist
 from keras.preprocessing.image import ImageDataGenerator
@@ -24,7 +26,7 @@ def shuffled(x, y):
  
 
 
-def load_data(generator=True, iter_limit=100):
+def load_data(generator=True, num_batches=600):
     num_classes = 10
 
     # input image dimensions
@@ -57,7 +59,7 @@ def load_data(generator=True, iter_limit=100):
     y_test = keras.utils.to_categorical(y_test, num_classes)
     if generator:
         datagen = ImageDataGenerator()
-        return itertools.islice(datagen.flow(x_train, y_train), iter_limit)
+        return itertools.islice(datagen.flow(x_train, y_train), num_batches)
     return x_train, x_test, y_train, y_test
 
 
@@ -66,31 +68,43 @@ def get_best_trial(trial_list, metric):
     return max(trial_list, key=lambda trial: trial.last_result.get(metric, 0))
 
 
+def get_sorted_trials(trial_list, metric):
+    return sorted(trial_list, key=lambda trial: trial.last_result.get(metric, 0), reverse=True)
+
+
 def get_best_result(trial_list, metric):
     """Retrieve the last result from the best trial."""
     return {metric: get_best_trial(trial_list, metric).last_result[metric]}
 
 
-def get_best_model_trainable(trainable, trial_list, metric):
-    """Restore a model from the best trial given a trainable."""
-    best_trial = get_best_trial(trial_list, metric)
-    trainable = trainable(best_trial.config)
-    assert best_trial.has_checkpoint()
-    trainable.restore(best_trial._checkpoint.value)
-    return trainable.model
+# def get_best_model_trainable(trainable, trial_list, metric):
+#     """Restore a model from the best trial given a trainable."""
+#     best_trial = get_best_trial(trial_list, metric)
+#     trainable = trainable(best_trial.config)
+#     assert best_trial.has_checkpoint()
+#     trainable.restore(best_trial._checkpoint.value)
+#     return trainable.model
 
 
-def get_best_model(model_creator, trial_list, metric, suffix="weights_tune.h5"):
+def get_best_model(model_creator, trial_list, metric):
     """Restore a model from the best trial."""
-    best_trial = get_best_trial(trial_list, metric)
-    model = model_creator(best_trial.config)
-    weights = os.path.join(best_trial.logdir, suffix)
-    print("Loading from", weights)
-    model.load_weights(weights)
+    sorted_trials = get_sorted_trials(trial_list, metric)
+    for best_trial in sorted_trials:
+        try:
+            print("Creating model...")
+            model = model_creator(best_trial.config)
+            weights = os.path.join(best_trial.logdir, best_trial.last_result["checkpoint"])
+            print("Loading from", weights)
+            model.load_weights(weights)
+            break
+        except Exception as e:
+            print(e)
+            print("Loading failed. Trying next model")
     return model
 
 def prepare_data(data):
-    return np.array(data).reshape((1, 28, 28, 1)).astype(np.float32)
+    new_data = np.array(data).reshape((1, 28, 28, 1)).astype(np.float32)
+    return ndimage.gaussian_filter(new_data, sigma=(0.5))
 
 class TuneCallback(keras.callbacks.Callback):
     def __init__(self, reporter, logs={}):
@@ -110,6 +124,8 @@ class GoodError(Exception):
 def test_reporter(train_mnist_tune):
     def mock_reporter(**kwargs):
         assert "mean_accuracy" in kwargs, "Did not report proper metric"
+        assert "checkpoint" in kwargs, "Accidentally removed `checkpoint`?"
+        assert "timesteps_total" in kwargs, "Accidentally removed `timesteps_total`?"
         assert isinstance(kwargs["mean_accuracy"], float), (
             "Did not report properly. Need to report a float!")
         raise GoodError("This works.")
