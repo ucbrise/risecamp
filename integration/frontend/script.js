@@ -6,31 +6,41 @@ var globalData = {
     "RL": 0
 };
 
+var chart = null;
+
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
 function drawGraph(dataPoints, animation) {
-var chart = new CanvasJS.Chart("chartContainer", {
-  animationEnabled: animation,
-	 
-	title:{
-		text:"Pong AI Scoreboard"
-	},
-	axisX:{
-		interval: 1
-	},
-	axisY2:{
-		interlacedColor: "rgba(1,77,101,.2)",
-		gridColor: "rgba(1,77,101,.1)",
-		title: "Point Differential"
-	},
-	data: [{
-		type: "bar",
-		name: "companies",
-		axisYType: "secondary",
-		color: "#014D65",
-		dataPoints: dataPoints
-	}]
-});
-chart.render();
+  if (chart != null) {
+    chart.destroy();
+  }
+
+  chart = new CanvasJS.Chart("chartContainer", {
+    animationEnabled: animation,
+
+    title:{
+      text:"Pong AI Scoreboard"
+    },
+    axisX:{
+      interval: 1
+    },
+    axisY2:{
+      interlacedColor: "rgba(1,77,101,.2)",
+      gridColor: "rgba(1,77,101,.1)",
+      title: "Point Differential"
+    },
+    data: [{
+      type: "bar",
+      name: "companies",
+      axisYType: "secondary",
+      color: "#014D65",
+      dataPoints: dataPoints
+    }]
+  });
+
+  chart.render();
 }
 
 function updateGraph(animation) {
