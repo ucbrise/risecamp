@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o errexit
 
 if [[ "$1" = "" ]]; then
   echo "Usage: ./diy [projname]" >&2
@@ -13,6 +14,8 @@ echo starting "$PROJ"
 NOTEBOOK_FLAGS+=" --NotebookApp.allow_origin='*'"
 NOTEBOOK_FLAGS+=" --NotebookApp.allow_remote_access=True"
 NOTEBOOK_FLAGS+=" --NotebookApp.password='sha1:3ec466c1b38d:6b4670be0553e483ca5ddde58bb4765c8ab40c10'"
+
+docker pull "ucbrise/risecamp2018-${PROJ}"
 
 docker run \
   --rm \
