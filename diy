@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [[ "$1" = "" ]]; then
+  echo "Usage: ./diy [projname]" >&2
+  exit 1
+fi
+
+PROJ=$1
+
+echo starting "$PROJ"
+
+# enable access with password "risecamp2018"
+NOTEBOOK_FLAGS+=" --NotebookApp.allow_origin='*'"
+NOTEBOOK_FLAGS+=" --NotebookApp.allow_remote_access=True"
+NOTEBOOK_FLAGS+=" --NotebookApp.password='sha1:3ec466c1b38d:6b4670be0553e483ca5ddde58bb4765c8ab40c10'"
+
+docker run \
+  --rm \
+  --name "risecamp_${PROJ}" \
+  -p 127.0.0.1:8080:8080 \
+  --memory 8g \
+  --shm-size 8g \
+  -e "NOTEBOOK_FLAGS=${NOTEBOOK_FLAGS}" \
+  -e "CONTAINER_BASE_URL=camp/${PROJ}" \
+  "ucbrise/risecamp2018-${PROJ}" \
+  "/bin/bash" "-c" "touch /var/run/docker.sock && /opt/risecamp_start.sh"
