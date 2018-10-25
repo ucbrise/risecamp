@@ -1,6 +1,6 @@
 # vim: filetype=make
 
-CURPROJ ?= $(shell basename $(CURDIR))
+CURPROJ ?= $(shell basename "$(CURDIR)")
 
 CONTAINER_AUTH_TOKEN := $(shell hexdump -e '"%x"' -n 24 /dev/urandom)
 CONTAINER_BASE_URL := "camp/$(CURPROJ)"
