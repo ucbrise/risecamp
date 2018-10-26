@@ -1,29 +1,42 @@
 #!/bin/bash
 set -o errexit
 
-if [[ "$1" = "" ]]; then
-  echo "Usage: ./diy [projname]" >&2
+if [[ "$1" = "" ]] || ! [[ "$2" = "" ]]; then
+  echo "Usage: ./diy (clipper|flor|integration|opaque|pywren|ray|wave)" >&2
   exit 1
 fi
 
 PROJ=$1
-
-echo starting "$PROJ"
+TAG="ucbrise/risecamp2018-${PROJ}:latest"
 
 # enable access with password "risecamp2018"
-NOTEBOOK_FLAGS+=" --NotebookApp.allow_origin='*'"
-NOTEBOOK_FLAGS+=" --NotebookApp.allow_remote_access=True"
 NOTEBOOK_FLAGS+=" --NotebookApp.password='sha1:3ec466c1b38d:6b4670be0553e483ca5ddde58bb4765c8ab40c10'"
+NOTEBOOK_FLAGS+=" --NotebookApp.allow_origin='*'"
+#NOTEBOOK_FLAGS+=" --NotebookApp.allow_remote_access=True"
 
-docker pull "ucbrise/risecamp2018-${PROJ}"
+# make sure we have the latest image
+docker pull "$TAG"
+
+# boot container
+echo "************************************************************"
+echo "***"
+echo "*** RISE Camp 2018"
+echo "***"
+echo "*** Tutorial: $PROJ"
+echo "*** Login URL: http://127.0.0.1:8080/camp/$PROJ"
+echo "*** Password: risecamp2018"
+echo "***"
+echo "************************************************************"
+echo
 
 docker run \
   --rm \
   --name "risecamp_${PROJ}" \
+  --user root \
   -p 127.0.0.1:8080:8080 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   --memory 8g \
   --shm-size 8g \
   -e "NOTEBOOK_FLAGS=${NOTEBOOK_FLAGS}" \
   -e "CONTAINER_BASE_URL=camp/${PROJ}" \
-  "ucbrise/risecamp2018-${PROJ}" \
-  "/bin/bash" "-c" "touch /var/run/docker.sock && /opt/risecamp_start.sh"
+  "$TAG"
