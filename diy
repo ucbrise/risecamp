@@ -35,8 +35,8 @@ docker run \
   --user root \
   -p 127.0.0.1:8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  --memory 8g \
-  --shm-size 8g \
+  --memory 16g \
+  --shm-size 16g \
   -e "NOTEBOOK_FLAGS=${NOTEBOOK_FLAGS}" \
   -e "CONTAINER_BASE_URL=camp/${PROJ}" \
   "$TAG"
