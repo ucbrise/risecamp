@@ -107,7 +107,7 @@ def plot_frames(input_data, x, y):
     #******************************************************************************
     # Read land mask
     #******************************************************************************
-    data_land_mask = '/home/ben/Dropbox/Talks/Open Data/data/lsmask.oisst.v2.nc'
+    data_land_mask = '/mnt/data/lsmask.oisst.v2.nc'
     ncLAND = Dataset(data_land_mask, mode='r')
     sst_land = np.asarray(ncLAND.variables['lsmask'][:].squeeze())
 
