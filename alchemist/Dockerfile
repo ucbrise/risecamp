@@ -137,17 +137,17 @@ RUN cd /root && \
 
 # Install asio
 RUN cd /root && \
-    git clone -b asio-1-12-0 https://github.com/chriskohlhoff/asio
+    git clone -b asio-1-12-0 https://github.com/chriskohlhoff/asio && \
+    ln -s /root/asio/asio /usr/local/asio
 
 # Install Alchemist
-COPY alchemist.patch /tmp
 RUN cd /usr/local && \
-    git clone https://github.com/project-alchemist/Alchemist && \
+    git clone -b odsc18 https://github.com/project-alchemist/Alchemist && \
     cd Alchemist && \
-    git checkout 2cf8bea2f057b9d0b19f9a38fd11453c5d64eb9f && \
-    patch -p1 < /tmp/alchemist.patch && \
-    rm /tmp/alchemist.patch && \
-    ./build.sh
+    SYSTEM=Linux ./build.sh
+
+# Install sbt
+RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
 
 # Install ACIPython
 RUN cd /usr/local && \
