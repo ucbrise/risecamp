@@ -52,7 +52,6 @@ RUN apt-get -y install \
    cmake \
    cmake-curses-gui \
    gfortran-6 \
-   libasio-dev \
    libgeos-dev \
    liblapack-dev \
    libmetis-dev \
@@ -123,23 +122,31 @@ RUN cd /root && \
     cd ../.. && \
     rm -rf eigen-eigen-5a0156e40feb
 
+# Install spdlog
 ENV SPDLOG_PATH /usr/local/spdlog
-
 RUN cd /root && \
     git clone https://github.com/gabime/spdlog.git && \
     cd spdlog && \
-    git checkout 4fba14c79f356ae48d6141c561bf9fd7ba33fabd && \
+    git checkout v1.x && \
     mkdir build && \
     cd build && \
-    cmake -DCMAKE_INSTALL_PREFIX=${SPDLOG_PATH} .. && \
+    cmake -DCMAKE_INSTALL_PREFIX=${SPDLOG_PATH} -DSPDLOG_BUILD_BENCH=0 -DSPDLOG_BUILD_EXAMPLES=0 -DSPDLOG_BUILD_TESTING=0 .. && \
     make install -j8 && \
     cd ../.. && \
     rm -rf spdlog
 
+# Install asio
+RUN cd /root && \
+    git clone -b asio-1-12-0 https://github.com/chriskohlhoff/asio
+
 # Install Alchemist
+COPY alchemist.patch /tmp
 RUN cd /usr/local && \
     git clone https://github.com/project-alchemist/Alchemist && \
-    cd Alchemist
+    cd Alchemist && \
+    patch -p1 < /tmp/alchemist.patch && \
+    rm /tmp/alchemist.patch && \
+    ./build.sh
 
 # Install ACIPython
 RUN cd /usr/local && \
@@ -147,12 +154,12 @@ RUN cd /usr/local && \
 
 # Python stuff
 USER $NB_USER
-RUN pip install git+https://github.com/erichson/ristretto
-RUN pip install tqdm
-RUN pip install h5py
-RUN pip install cmocean
-RUN pip install netCDF4
-RUN pip install git+https://github.com/matplotlib/basemap
+#RUN pip install git+https://github.com/erichson/ristretto
+#RUN pip install tqdm
+#RUN pip install h5py
+#RUN pip install cmocean
+#RUN pip install netCDF4
+#RUN pip install git+https://github.com/matplotlib/basemap
 
 # configure httpd
 COPY nginx.conf /etc/nginx/sites-enabled/default
