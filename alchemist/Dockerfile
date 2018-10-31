@@ -144,6 +144,7 @@ COPY alchemist.patch /tmp
 RUN cd /usr/local && \
     git clone https://github.com/project-alchemist/Alchemist && \
     cd Alchemist && \
+    git checkout 2cf8bea2f057b9d0b19f9a38fd11453c5d64eb9f && \
     patch -p1 < /tmp/alchemist.patch && \
     rm /tmp/alchemist.patch && \
     ./build.sh
@@ -154,12 +155,12 @@ RUN cd /usr/local && \
 
 # Python stuff
 USER $NB_USER
-#RUN pip install git+https://github.com/erichson/ristretto
-#RUN pip install tqdm
-#RUN pip install h5py
-#RUN pip install cmocean
-#RUN pip install netCDF4
-#RUN pip install git+https://github.com/matplotlib/basemap
+RUN pip install git+https://github.com/erichson/ristretto
+RUN pip install tqdm
+RUN pip install h5py
+RUN pip install cmocean
+RUN pip install netCDF4
+RUN pip install git+https://github.com/matplotlib/basemap
 
 # configure httpd
 COPY nginx.conf /etc/nginx/sites-enabled/default
