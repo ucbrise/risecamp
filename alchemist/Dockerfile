@@ -81,9 +81,7 @@ RUN cd /root && \
     cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DEL_DISABLE_PARMETIS=1 -DCMAKE_INSTALL_PREFIX=${ELEMENTAL_PATH} .. && \
     nice make -j8  && \
-    make install  && \
-    cd ../.. && \
-    rm -rf Elemental
+    make install
 
 # Install arpack
 RUN cd /root && \
@@ -94,9 +92,7 @@ RUN cd /root && \
     cd build && \
     cmake -DMPI=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${ARPACK_PATH} .. && \
     nice make -j8 && \
-    make install && \
-    cd ../.. && \
-    rm -rf arrack-ng
+    make install
 
 # Install arpackpp
 RUN cd /root && \
@@ -106,9 +102,7 @@ RUN cd /root && \
     mkdir build && \
     cd build && \
     cmake -DCMAKE_INSTALL_PREFIX=${ARPACK_PATH} .. && \
-    make install && \
-    cd ../.. && \
-    rm -rf arpackpp
+    make install
 
 # Install Eigen
 RUN cd /root && \
@@ -118,9 +112,7 @@ RUN cd /root && \
     cd build && \
     cmake -DCMAKE_INSTALL_PREFIX=${EIGEN_PATH} .. && \
     nice make -j8 && \
-    make install && \
-    cd ../.. && \
-    rm -rf eigen-eigen-5a0156e40feb
+    make install
 
 # Install spdlog
 ENV SPDLOG_PATH /usr/local/spdlog
@@ -131,9 +123,7 @@ RUN cd /root && \
     mkdir build && \
     cd build && \
     cmake -DCMAKE_INSTALL_PREFIX=${SPDLOG_PATH} -DSPDLOG_BUILD_BENCH=0 -DSPDLOG_BUILD_EXAMPLES=0 -DSPDLOG_BUILD_TESTING=0 .. && \
-    make install -j8 && \
-    cd ../.. && \
-    rm -rf spdlog
+    make install
 
 # Install asio
 RUN cd /root && \
