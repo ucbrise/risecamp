@@ -162,6 +162,9 @@ RUN cd /usr/local && \
     cd ACISpark && \
     PATH="$PATH:/opt/sbt/bin" ./build.sh
 
+# permissions kludge
+RUN chown -R jovyan:users /usr/local/Alchemist/
+
 # Python stuff
 USER $NB_USER
 RUN pip install git+https://github.com/erichson/ristretto
