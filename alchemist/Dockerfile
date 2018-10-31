@@ -146,12 +146,19 @@ RUN cd /usr/local && \
     cd Alchemist && \
     SYSTEM=Linux ./build.sh
 
-# Install sbt
-RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
-
 # Install ACIPython
 RUN cd /usr/local && \
     git clone https://github.com/project-alchemist/ACIPython
+
+# Install sbt
+RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
+
+# Install ACISpark
+ENV ACISPARK_PATH /usr/local/ACISpark
+RUN cd $HOME/Projects && \
+    git clone -b odsc18 https://github.com/project-alchemist/ACISpark && \
+    cd ACISpark && \
+    SYSTEM=Linux PATH="$PATH:/opt/sbt/bin" ./build.sh
 
 # Python stuff
 USER $NB_USER
