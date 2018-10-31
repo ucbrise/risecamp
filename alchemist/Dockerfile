@@ -26,6 +26,7 @@ ENV PYTHONPATH $SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.7-src.zip
 ENV SPARK_OPTS --driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info
 
 # Apache Toree kernel
+USER $NB_USER
 RUN pip install --no-cache-dir \
     https://dist.apache.org/repos/dist/dev/incubator/toree/0.3.0-incubating-rc1/toree-pip/toree-0.3.0.tar.gz \
     && \
@@ -35,6 +36,7 @@ RUN pip install --no-cache-dir \
     fix-permissions /home/$NB_USER
 
 # Spylon-kernel
+USER $NB_USER
 RUN conda install --quiet --yes 'spylon-kernel=0.4*' && \
     conda clean -tipsy && \
     python -m spylon_kernel install --sys-prefix && \
@@ -42,27 +44,26 @@ RUN conda install --quiet --yes 'spylon-kernel=0.4*' && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
-RUN add-apt-repository universe && \
-    apt-get update && \
-    apt-get -y install mpich
+USER root
+RUN apt-get update
+RUN apt-get -y install \
+   aptitude \
+   build-essential \
+   cmake \
+   cmake-curses-gui \
+   gfortran-6 \
+   libasio-dev \
+   libgeos-dev \
+   liblapack-dev \
+   libmetis-dev \
+   libopenblas-dev \
+   libparmetis-dev \
+   libproj-dev \
+   libspdlog-dev \
+   mpich \
+   screen \
+   vim
 
-RUN apt-get -y install libasio-dev
-
-RUN apt-get -y install libspdlog-dev
-
-RUN apt-get -y install build-essential
-
-RUN apt-get -y install gfortran-6
-
-RUN apt-get -y install cmake
-
-RUN apt-get -y install cmake-curses-gui
-
-RUN apt-get -y install libopenblas-dev liblapack-dev libmetis-dev libparmetis-dev vim screen aptitude
-
-RUN apt-get -y install libproj-dev
-
-RUN apt-get -y install libgeos-dev
 
 # Elemental config
 ENV ALCHEMIST_PATH /usr/local/Alchemist
@@ -145,18 +146,13 @@ RUN cd /usr/local && \
     git clone https://github.com/project-alchemist/ACIPython
 
 # Python stuff
+USER $NB_USER
 RUN pip install git+https://github.com/erichson/ristretto
 RUN pip install tqdm
 RUN pip install h5py
 RUN pip install cmocean
 RUN pip install netCDF4
 RUN pip install git+https://github.com/matplotlib/basemap
-
-# use "$NB_USER" when installing python packages
-USER $NB_USER
-
-# perform boot-time initialization by adding a startup script
-COPY init-world.sh /usr/local/bin/start-notebook.d
 
 # configure httpd
 COPY nginx.conf /etc/nginx/sites-enabled/default
