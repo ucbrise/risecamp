@@ -135,7 +135,7 @@ ENV SYSTEM Linux
 RUN cd /usr/local && \
     git clone -b odsc18 https://github.com/project-alchemist/Alchemist && \
     cd Alchemist && \
-    ./build.sh
+    ./build.sh && echo 2
 
 # Install sbt
 RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
