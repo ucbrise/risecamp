@@ -152,8 +152,9 @@ RUN cd /usr/local && \
     cd ACISpark && \
     PATH="$PATH:/opt/sbt/bin" ./build.sh
 
-# permissions kludge
+# kludges
 RUN chown -R jovyan:users /usr/local/Alchemist/
+RUN echo "/usr/local/elemental/lib" >> /etc/ld.so.conf && ldconfig
 
 # Python stuff
 USER $NB_USER
