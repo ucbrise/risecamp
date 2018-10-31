@@ -141,10 +141,11 @@ RUN cd /root && \
     ln -s /root/asio/asio /usr/local/asio
 
 # Install Alchemist
+ENV SYSTEM Linux
 RUN cd /usr/local && \
     git clone -b odsc18 https://github.com/project-alchemist/Alchemist && \
     cd Alchemist && \
-    SYSTEM=Linux ./build.sh
+    ./build.sh
 
 # Install ACIPython
 RUN cd /usr/local && \
@@ -155,10 +156,11 @@ RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
 
 # Install ACISpark
 ENV ACISPARK_PATH /usr/local/ACISpark
+RUN apt-get install -y openssh-client
 RUN cd /usr/local && \
     git clone -b odsc18 https://github.com/project-alchemist/ACISpark && \
     cd ACISpark && \
-    SYSTEM=Linux PATH="$PATH:/opt/sbt/bin" ./build.sh
+    PATH="$PATH:/opt/sbt/bin" ./build.sh
 
 # Python stuff
 USER $NB_USER
