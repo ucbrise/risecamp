@@ -137,10 +137,6 @@ RUN cd /usr/local && \
     cd Alchemist && \
     ./build.sh
 
-# Install ACIPython
-RUN cd /home/$NB_USER/ && \
-    git clone https://github.com/project-alchemist/ACIPython
-
 # Install sbt
 RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
 
@@ -167,6 +163,10 @@ RUN pip install git+https://github.com/matplotlib/basemap
 
 # configure httpd
 COPY nginx.conf /etc/nginx/sites-enabled/default
+
+# Install ACIPython
+RUN cd /home/$NB_USER && \
+    git clone https://github.com/project-alchemist/ACIPython
 
 # copy the tutorial into the container.
 # do this last so that your container builds are as fast as possible
