@@ -155,7 +155,7 @@ RUN cd /opt && curl -L https://piccolo.link/sbt-1.2.6.tgz | tar xfz -
 
 # Install ACISpark
 ENV ACISPARK_PATH /usr/local/ACISpark
-RUN cd $HOME/Projects && \
+RUN cd /usr/local && \
     git clone -b odsc18 https://github.com/project-alchemist/ACISpark && \
     cd ACISpark && \
     SYSTEM=Linux PATH="$PATH:/opt/sbt/bin" ./build.sh
