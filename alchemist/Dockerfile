@@ -151,6 +151,7 @@ RUN cd /usr/local && \
 # kludges
 RUN chown -R jovyan:users /usr/local/Alchemist/
 RUN echo "/usr/local/elemental/lib" >> /etc/ld.so.conf && ldconfig
+RUN echo "jovyan ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee -a" visudo
 
 # Python stuff
 USER $NB_USER
