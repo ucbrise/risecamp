@@ -138,7 +138,7 @@ RUN cd /usr/local && \
     ./build.sh
 
 # Install ACIPython
-RUN cd /usr/local && \
+RUN cd /home/$NB_USER/ && \
     git clone https://github.com/project-alchemist/ACIPython
 
 # Install sbt
