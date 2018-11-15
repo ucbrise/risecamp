@@ -29,6 +29,18 @@ echo "***"
 echo "************************************************************"
 echo
 
+if [[ "$PROJ" = "ray" ]]; then
+  DOCKER_RUN_FLAGS+=" -p 127.0.0.1:3000:3000"
+  DOCKER_RUN_FLAGS+=" -p 127.0.0.1:6006:6006"
+  DOCKER_RUN_FLAGS+=" -p 127.0.0.1:8889:8889"
+fi
+
+if [[ "$PROJ" = "clipper" ]] || [[ "$PROJ" = "integration" ]]; then
+  docker network create "${PROJ}_network" &> /dev/null || true
+  DOCKER_RUN_FLAGS+=" --network=${PROJ}_network"
+  DOCKER_RUN_FLAGS+=" -v /tmp:/tmp"
+fi
+
 docker run \
   --rm \
   --name "risecamp_${PROJ}" \
@@ -39,4 +51,5 @@ docker run \
   --shm-size 16g \
   -e "NOTEBOOK_FLAGS=${NOTEBOOK_FLAGS}" \
   -e "CONTAINER_BASE_URL=camp/${PROJ}" \
+  ${DOCKER_RUN_FLAGS} \
   "$TAG"
