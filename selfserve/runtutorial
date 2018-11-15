@@ -2,7 +2,7 @@
 set -o errexit
 
 if [[ "$1" = "" ]] || ! [[ "$2" = "" ]]; then
-  echo "Usage: ./diy (clipper|flor|integration|opaque|pywren|ray|wave)" >&2
+  echo "Usage: ./runtutorial (clipper|flor|integration|opaque|pywren|ray|wave)" >&2
   exit 1
 fi
 
