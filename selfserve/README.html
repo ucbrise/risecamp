@@ -1,0 +1,37 @@
+<h1 id="risecamp-2018-tutorials-self-serve">RISECamp 2018 Tutorials (Self-Serve)</h1>
+<p>This directory contains scripts that can be used to run the RISECamp 2018 tutorials at home on your own computer.</p>
+<h2 id="macos-and-linux">MacOS and Linux</h2>
+<ol type="1">
+<li>Install and start <a href="https://docs.docker.com/install/">Docker CE</a>.</li>
+<li>Open a terminal and <code>cd</code> to this directory.</li>
+<li>Use the <code>./runtutorial [name]</code> script to start the tutorial. Valid tutorials are <code>clipper|flor|integration|opaque|pywren|ray|wave</code>.</li>
+<li><p>Once the container has finished booting, you’ll see output like this with the URL and password to access the selected tutorial:</p>
+<pre><code> ************************************************************
+ ***
+ *** RISE Camp 2018
+ ***
+ *** Tutorial: ray
+ *** Login URL: http://127.0.0.1:8080/camp/ray
+ *** Password: risecamp2018
+ ***
+ ************************************************************</code></pre></li>
+<li><p>Press Control-C when finished to shutdown the tutorial.</p></li>
+</ol>
+<h2 id="windows">Windows</h2>
+<ol type="1">
+<li>Install and start <a href="https://docs.docker.com/install/">Docker CE</a>.</li>
+<li>Open a terminal and <code>cd</code> to this directory’s <code>windows</code> subdirectory.</li>
+<li><p>Use the <code>[name].cmd</code> script to start the tutorial. Valid tutorials are <code>clipper|flor|integration|opaque|pywren|ray|wave</code>. Example:</p>
+<pre><code> .\ray.cmd</code></pre></li>
+<li><p>Once the container has finished booting, you’ll see output like this with the URL and password to access the selected tutorial:</p>
+<pre><code> ************************************************************
+ ***
+ *** RISE Camp 2018
+ ***
+ *** Tutorial: ray
+ *** Login URL: http://127.0.0.1:8080/camp/ray
+ *** Password: risecamp2018
+ ***
+ ************************************************************</code></pre></li>
+<li><p>Type <code>docker rm -f risecamp_[name]</code> to shutdown the tutorial when finished.</p></li>
+</ol>
