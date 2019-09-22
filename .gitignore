@@ -1,3 +1,4 @@
 pywren-config.env
+example/
 .ipynb_checkpoints
 .DS_Store
