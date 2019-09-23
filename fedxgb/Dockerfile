@@ -3,10 +3,11 @@ FROM ucbjey/risecamp2018-base:2b580e66f1f7
 # use apt-get as user "root" to install ubuntu packages
 USER root
 RUN apt-get update && apt-get install -y g++ && apt-get -y install openssh-client
+RUN git clone https://github.com/mc2-project/risecamp-data.git /data
 
 # use "$NB_USER" when installing python packages
 USER $NB_USER
-RUN pip3 install xgboost
+RUN pip3 install xgboost && pip3 install pandas && pip3 install sklearn
 RUN git clone https://github.com/mc2-project/dmlc-core.git /home/$NB_USER/dmlc-core
 RUN ssh-keygen -q -t rsa -b 4096 -N '' -f /home/$NB_USER/.ssh/id_rsa
 

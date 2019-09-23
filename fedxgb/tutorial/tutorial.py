@@ -7,7 +7,7 @@ fxgb = FederatedXGBoost()
 print(fxgb.get_num_parties())
 
 # Load training data
-fxgb.load_training_data('/home/ubuntu/data/msd_training_data_split.csv')
+fxgb.load_training_data('/data/dummy_data.csv')
 
 # Train a model
 params = {'max_depth': 3, 'min_child_weight': 1.0, 'lambda': 1.0}
@@ -18,7 +18,7 @@ fxgb.train(params, num_rounds)
 fxgb.save_model("tutorial_model.model")
 
 # Load the test data
-fxgb.load_test_data('/home/ubuntu/data/msd_test_data_split.csv')
+fxgb.load_test_data('/data/dummy_data.csv')
 
 # Evaluate the model
 print(fxgb.eval())
