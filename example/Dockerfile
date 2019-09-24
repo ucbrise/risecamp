@@ -2,13 +2,11 @@ FROM ucbjey/risecamp2018-base:2b580e66f1f7
 
 # use apt-get as user "root" to install ubuntu packages
 USER root
-RUN apt-get update && apt-get install -y g++ && apt-get -y install openssh-client
+RUN apt-get install -y g++
 
 # use "$NB_USER" when installing python packages
 USER $NB_USER
-RUN pip3 install xgboost
-RUN git clone https://github.com/mc2-project/dmlc-core.git /home/$NB_USER/dmlc-core
-RUN ssh-keygen -q -t rsa -b 4096 -N '' -f /home/$NB_USER/.ssh/id_rsa
+RUN pip install bokeh==0.13.0
 
 # perform boot-time initialization by adding a startup script
 COPY init-world.sh /usr/local/bin/start-notebook.d
