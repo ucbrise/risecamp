@@ -11,6 +11,7 @@ NOTEBOOK_FLAGS += --NotebookApp.allow_remote_access=True
 DOCKER_RUN_FLAGS = \
 	--rm \
 	--name "risecamp_$(CURPROJ)" \
+	--network "test-net" \
 	-p 8080:8080 \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--shm-size 64000m \
