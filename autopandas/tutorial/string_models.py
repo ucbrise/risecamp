@@ -11,6 +11,7 @@ from torch_geometric.data import DataLoader, Data, Batch
 from torch_geometric.nn import GatedGraphConv, global_mean_pool, global_add_pool
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_scatter import scatter_max, scatter_add, scatter_mul
+from typing import List, Union
 
 
 def softmax(src, index, num_nodes=None):
@@ -38,25 +39,88 @@ def softmax(src, index, num_nodes=None):
     return scores, shifted - (exp_sum + 1e-16).log()
 
 
+class GraphModel(torch.nn.Module):
+    def __init__(self, node_dim: int, num_convs: int, num_layers: Union[int, List[int]], num_edge_types: int):
+        super().__init__()
+        self.convs = []
+        if isinstance(num_layers, int):
+            num_layers = [num_layers] * num_convs
+
+        for i in range(num_convs):
+            self.convs.append(GatedGraphConv(node_dim, num_layers=1))
+
+        #  Weight given to each edge type
+        self.edge_type_weights = torch.nn.Parameter(torch.FloatTensor((1.0,) * num_edge_types))
+
+        #  Simple linear layer for the output of conv3
+        self.lin1 = torch.nn.Linear(node_dim, node_dim)
+
+        #  Slope for leaky relus
+        self.neg_slope = 0.01
+
+    def forward(self, data):
+        #  x := Node embeddings (1-D flattened array with nodes of all graphs in batch)
+        #  edge_index := adjacency list
+        #  batch := 1-D array containing the graph-id of each node
+        x, edge_index, batch, edge_attr = data.x, data.edge_index, data.batch, data.edge_attr
+        edge_weights = self.edge_type_weights[edge_attr]
+
+        #  Start message passing
+        for conv in self.convs:
+            x = F.leaky_relu(conv(x, edge_index, edge_weights), negative_slope=self.neg_slope)
+
+        x = F.leaky_relu(self.lin1(x), negative_slope=self.neg_slope)
+        return x
+
+
+def encode_strings_as_graphs(strlist):
+    nodes = []
+    adjacency_edges = []
+    equality_edges = []
+
+    equality_maps = []
+    for idx, s in enumerate(strlist):
+        embedding = [0] * len(strlist)
+        embedding[idx] = 1
+        new_nodes = [embedding + [int(c.isalpha())] for c in s]
+        for i in range(len(nodes), len(nodes) + len(s) - 1):
+            adjacency_edges.append([i, i + 1])
+
+        eq_map = collections.defaultdict(list)
+        for n_idx, c in enumerate(s, len(nodes)):
+            eq_map[c].append(n_idx)
+
+        nodes.extend(new_nodes)
+        equality_maps.append(eq_map)
+
+    for m1 in equality_maps:
+        for m2 in equality_maps:
+            if m1 is m2:
+                continue
+
+            for k, v in m1.items():
+                equality_edges.extend([[i, j] for i in v for j in m2[k]])
+
+    return nodes, adjacency_edges, equality_edges
+
+
 class SubstrModel(PyTorchOpModel):
     def __init__(self, node_dim: int):
         super().__init__()
-        self.conv1 = GatedGraphConv(node_dim, num_layers=3)
-        self.conv2 = GatedGraphConv(node_dim, num_layers=3)
-        self.conv3 = GatedGraphConv(node_dim, num_layers=3)
-        #  Simple linear layer for the output of conv3
-        self.lin1 = torch.nn.Linear(node_dim, node_dim)
+        self.graph_model = GraphModel(node_dim, num_convs=3, num_layers=1, num_edge_types=2)
+        #  Linear layer to account for state
+        self.lin2 = torch.nn.Linear(2 * node_dim, node_dim)
         #  Attention score to find start index of the substr
         self.lin_start = torch.nn.Linear(2 * node_dim, 1)
         #  Attention score to find end index of the substr
         self.lin_end = torch.nn.Linear(2 * node_dim, 1)
-        self.lin_state = torch.nn.Linear(node_dim * 2, node_dim)
-        #  Weight given to each edge type
-        self.edge_type_weights = torch.nn.Parameter(torch.FloatTensor((1.0, 1.0)))
+        #  Linear layer for new state
+        self.lin_state = torch.nn.Linear(2 * node_dim, node_dim)
+
+        self.top_k = 10
 
         #  Slope for leaky relus
         self.neg_slope = 0.01
-        self.top_k = 10
 
     def encode(self, data):
         return Batch.from_data_list([self.encode_point(p) for p in data])
@@ -68,9 +132,9 @@ class SubstrModel(PyTorchOpModel):
             result = self(batch, state=state, mode="infer")
 
             cands = []
-            start_cands = sorted([(i, idx) for idx, i in enumerate(result[0])], key=lambda x: -x[0])[:self.top_k]
+            start_cands = sorted([(i, idx) for idx, i in enumerate(result[0][:len(domain)])], key=lambda x: -x[0])[:self.top_k]
             for s_prob, s in start_cands:
-                end_cands = sorted([(i, idx) for idx, i in enumerate(result[1]) if idx >= s],
+                end_cands = sorted([(i, idx) for idx, i in enumerate(result[1][:len(domain)]) if idx >= s],
                                    key=lambda x: -x[0])[:self.top_k]
                 cands.extend([(s_prob * e_prob, s, e) for e_prob, e in end_cands])
 
@@ -79,39 +143,8 @@ class SubstrModel(PyTorchOpModel):
 
     def encode_point(self, point):
         domain, (inp, out), choice = point
-        domain_nodes = [[1, 0, 0, int(c.isalpha())] for c in domain]
-        inp_nodes = [[0, 1, 0, int(c.isalpha())] for c in inp]
-        out_nodes = [[0, 0, 1, int(c.isalpha())] for c in out]
-
-        x = torch.tensor(domain_nodes + inp_nodes + out_nodes, dtype=torch.float)
-        adjacency_edges = []
-        adjacency_edges.extend([[i, i + 1] for i in range(0, len(domain) - 1)])
-        adjacency_edges.extend([[i, i + 1] for i in range(len(domain), len(domain) + len(inp) - 1)])
-        adjacency_edges.extend(
-            [[i, i + 1] for i in range(len(domain) + len(inp), len(domain) + len(inp) + len(out) - 1)])
-
-        eq_map_domain = collections.defaultdict(list)
-        eq_map_inp = collections.defaultdict(list)
-        eq_map_out = collections.defaultdict(list)
-
-        for idx, i in enumerate(domain):
-            eq_map_domain[i].append(idx)
-        for idx, i in enumerate(inp, len(domain)):
-            eq_map_inp[i].append(idx)
-        for idx, i in enumerate(out, len(domain) + len(inp)):
-            eq_map_out[i].append(idx)
-
-        equality_edges = []
-        for _, v in eq_map_domain.items():
-            equality_edges.extend([[i, j] for i in v for j in v if i != j])
-
-        for m1 in [eq_map_domain, eq_map_inp, eq_map_out]:
-            for m2 in [eq_map_domain, eq_map_inp, eq_map_out]:
-                if m1 is m2:
-                    continue
-
-                for k, v in m1.items():
-                    equality_edges.extend([[i, j] for i in v for j in m2[k]])
+        x, adjacency_edges, equality_edges = encode_strings_as_graphs([domain, inp, out])
+        x = torch.tensor(x, dtype=torch.float)
 
         edges = torch.tensor(adjacency_edges + equality_edges, dtype=torch.long).t().contiguous()
         edge_attr = torch.tensor([0 for _ in adjacency_edges] + [1 for _ in equality_edges], dtype=torch.long)
@@ -132,21 +165,18 @@ class SubstrModel(PyTorchOpModel):
         #  x := Node embeddings (1-D flattened array with nodes of all graphs in batch)
         #  edge_index := adjacency list
         #  batch := 1-D array containing the graph-id of each node
-        x, edge_index, batch, edge_attr = data.x, data.edge_index, data.batch, data.edge_attr
-        edge_weights = self.edge_type_weights[edge_attr]
-        x = F.leaky_relu(self.conv1(x, edge_index, edge_weights), negative_slope=self.neg_slope)
-        x = F.leaky_relu(self.conv2(x, edge_index, edge_weights), negative_slope=self.neg_slope)
-        x = F.leaky_relu(self.conv3(x, edge_index, edge_weights), negative_slope=self.neg_slope)
-        x = F.leaky_relu(self.lin1(x), negative_slope=self.neg_slope)
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        x = self.graph_model(data)
 
         graph_pooled = global_mean_pool(x, batch)
-        x_cat = torch.cat([x, graph_pooled[batch]], dim=1)
+        processed = self.lin2(torch.cat([graph_pooled, state], dim=1))
+        x_cat = torch.cat([x, processed[batch]], dim=1)
         scores_start = F.leaky_relu(self.lin_start(x_cat), negative_slope=self.neg_slope).view(-1)
         scores_end = F.leaky_relu(self.lin_end(x_cat), negative_slope=self.neg_slope).view(-1)
 
         attn_start, log_attn_start = softmax(scores_start, batch)
         attn_end, log_attn_end = softmax(scores_end, batch)
-        state = self.lin_state(torch.cat([graph_pooled, state], dim=1))
+        state = F.leaky_relu(self.lin_state(torch.cat([processed, state], dim=1)), negative_slope=self.neg_slope)
 
         if mode == 'train/test':
             labels_start = data.y[:, 0]
@@ -167,3 +197,68 @@ class SubstrModel(PyTorchOpModel):
 
         elif mode == 'infer':
             return attn_start, attn_end, state
+
+
+class SelectFuncModel(PyTorchOpModel):
+    def __init__(self, node_dim: int, num_classes: int):
+        super().__init__()
+        self.graph_model = GraphModel(node_dim, num_convs=3, num_layers=1, num_edge_types=2)
+
+        #  Softmax linear layer
+        self.lin2 = torch.nn.Linear(node_dim * 2, num_classes)
+
+        #  Linear layer to compute next state
+        self.lin_state = torch.nn.Linear(node_dim * 2, node_dim)
+
+        #  Slope for leaky relus
+        self.neg_slope = 0.01
+
+    def encode(self, data):
+        return Batch.from_data_list([self.encode_point(p) for p in data])
+
+    def infer(self, domain, context, state=None):
+        batch = self.encode([(domain, context, None)])
+        self.eval()
+        with torch.no_grad():
+            result = self(batch, state=state, mode="infer")
+            preds = result[0][0]
+            cands = [(i, idx) for idx, i in enumerate(preds)]
+            cands = sorted(cands, key=lambda x: -x[0])
+            cands = [domain[i] for _, i in cands]
+            return cands, result[1]
+
+    def encode_point(self, point):
+        domain, (inp, out), choice = point
+        x, adjacency_edges, equality_edges = encode_strings_as_graphs([domain, inp, out])
+        x = torch.tensor(x, dtype=torch.float)
+        edges = torch.tensor(adjacency_edges + equality_edges, dtype=torch.long).t().contiguous()
+        edge_attr = torch.tensor([0 for _ in adjacency_edges] + [1 for _ in equality_edges], dtype=torch.long)
+
+        if choice is None:
+            return Data(x=x, edge_index=edges, edge_attr=edge_attr)
+        else:
+            if choice not in domain:
+                raise ValueError("Could not find label inside domain")
+
+            y = [domain.index(choice)]
+            return Data(x=x, edge_index=edges, edge_attr=edge_attr, y=torch.tensor(y, dtype=torch.long))
+
+    def forward(self, data, state=None, mode='train/test'):
+        #  x := Node embeddings (1-D flattened array with nodes of all graphs in batch)
+        #  edge_index := adjacency list
+        #  batch := 1-D array containing the graph-id of each node
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        x = self.graph_model(data)
+
+        graph_pooled = global_mean_pool(x, batch)
+        x_cat = torch.cat([graph_pooled, state], dim=1)
+        x = F.leaky_relu(self.lin2(x_cat), negative_slope=self.neg_slope)
+        state = F.leaky_relu(self.lin_state(x_cat), negative_slope=self.neg_slope)
+
+        if mode == 'train/test':
+            loss = F.nll_loss(F.log_softmax(x, dim=1), data.y)
+            _, preds = F.softmax(x, dim=1).max(1)
+            return loss, preds.eq(data.y).type(torch.float), state
+
+        elif mode == 'infer':
+            return F.softmax(x, dim=1), state
