@@ -4,4 +4,6 @@
 # prepare the container environment:
 
 set -o errexit
+
 service ssh start
+echo "hello world!"
