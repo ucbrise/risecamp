@@ -1,0 +1,16 @@
+numpy
+scipy
+scikit-learn
+pillow
+jupyterlab
+matplotlib
+git+https://github.com/ucbrise/clipper.git@develop
+http://download.pytorch.org/whl/cpu/torch-0.4.0-cp36-cp36m-linux_x86_64.whl
+torchvision
+cloudpickle==0.5.3
+https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.8.0.dev5-cp36-cp36m-manylinux1_x86_64.whl
+grpc
+typing
+uuid
+w3lib
+git+https://github.com/harbor-ml/modelzoo.git
