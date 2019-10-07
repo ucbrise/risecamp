@@ -8,12 +8,8 @@ RUN apt-get install -y g++ git
 # use "$NB_USER" when installing python packages
 USER $NB_USER
 RUN conda install python=3.7 anaconda=custom
-RUN git clone --single-branch --branch pytorch-integration https://github.com/rbavishi/atlas.git
-RUN cd atlas && git pull origin pytorch-integration && pip install -e . 
-RUN pip install --verbose --no-cache-dir torch-scatter
-RUN pip install --verbose --no-cache-dir torch-sparse
-RUN pip install --verbose --no-cache-dir torch-cluster
-RUN pip install torch-geometric
+RUN git clone  --single-branch --branch risecamp https://github.com/rbavishi/atlas.git
+RUN cd atlas && git pull origin risecamp && pip install -e . 
 
 # perform boot-time initialization by adding a startup script
 COPY init-world.sh /usr/local/bin/start-notebook.d
