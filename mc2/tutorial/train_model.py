@@ -7,7 +7,7 @@ fxgb = FederatedXGBoost()
 print("Number of parties in federation: ", fxgb.get_num_parties())
 
 # Load training data
-training_data_path = "/data/insurance/insurance_training.csv"
+training_data_path = "/data/hb/hb_train.csv"
 fxgb.load_training_data(training_data_path)
 
 # Train a model
@@ -16,7 +16,7 @@ num_rounds = 100
 fxgb.train(params, num_rounds)
 
 # Save the model
-fxgb.save_model("ex3_model.model")
+fxgb.save_model("ex2_model.model")
 
 # Shutdown
 fxgb.shutdown()
