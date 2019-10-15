@@ -398,8 +398,6 @@ def start_job(num_parties):
            
             process = subprocess.Popen(
                 ssh_kill_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            # for line in iter(process.stdout.readline, b''):
-            #    sys.stdout.write(line)
 
     cmd = ["../dmlc-core/tracker/dmlc-submit", "--cluster", "ssh", "--num-workers",
            str(num_parties), "--host-file", "hosts.config", "--worker-memory", "4g", "/opt/conda/bin/python3", "/home/$USER/train_model.py"]
