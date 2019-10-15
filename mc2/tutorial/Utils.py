@@ -18,6 +18,7 @@ class PKI:
             'mongodb://%s:%s@54.202.14.46:27017/PKI' % (db_username, db_password))
         self.db = self.client['PKI']
 
+
     def upload(self, username, IP, pubkey):
         try:
             collection = self.db.posts
@@ -32,9 +33,13 @@ class PKI:
                     'key': pubkey
                 }
             result = collection.find_one_and_replace(query, doc, upsert=True)
-            print(result)
+            print('Uploaded information:')
+            print('\tUsername: %s' % username)
+            print('\tIP: %s' % IP)
+            print('\tPublic key: %s...' % pubkey[8:18])
         except Exception as e:
             print(str(e))
+
 
     def lookup(self, username):
         try:
@@ -44,38 +49,44 @@ class PKI:
             }
             result = posts.find_one(query)
             if result == None:
-                print("User %s not found" % username)
+                print("No information found for user %s" % username)
                 return None, None
             else:
+                print('Retrieved information for user %s:' % username)
+                print('\tIP: %s' % result['IP'])
+                print('\tPublic key: %s...' % result['key'][8:18])
                 return result['IP'], result['key']
         except Exception as e:
             print(str(e))
+
 
     def save_key(self, username):
         try:
             IP, key = self.lookup(username)
             if key == None:
-                return
+                return False
             home = expanduser("~")
             with open(home + "/.ssh/authorized_keys", "a") as authorized_keys:
                 authorized_keys.write("%s\n" % key)
                 print("Saved key for user %s" % username)
+            return True
         except Exception as e:
             print(str(e))
 
 
 class Federation:
-    def __init__(self, username):
+    def __init__(self):
         self.client = MongoClient(
             'mongodb://%s:%s@54.202.14.46:27017/Federations' % (db_username, db_password))
         self.db = self.client['Federations']
-        self.username = username
+        self.username = None
         self.aggregator = None
+
 
     def check_federation(self):
         if self.aggregator is None:
             print("No federation to check. Please create or join a federation first.")
-            return
+            return False
 
         try:
             collection = self.db.federations
@@ -88,7 +99,11 @@ class Federation:
                 print("No such federation exists")
                 return False
 
-            members = result['members']
+            members_list = result['members']
+            members = []
+            for member in members_list:
+                members.append(member['member'])
+
             print("Federation members: %s" % members)
 
             collection = self.db.members
@@ -105,17 +120,80 @@ class Federation:
             return True
         except Exception as e:
             print(str(e))
+            return False
+
+
+    def get_federation_members(self, aggregator_name):
+        try:
+            collection = self.db.federations
+            query = \
+                {
+                    'master': aggregator_name
+                }
+            result = collection.find_one(query)
+            if (result == None):
+                print("No federation found")
+                return None
+
+            members_list = result['members']
+            members = []
+            for member in members_list:
+                members.append(member['member'])
+
+            return members
+
+        except Exception as e:
+            print(str(e))
+            return None
+
+
+    def get_federation_member_id(self, aggregator_name, member_name):
+        try:
+            collection = self.db.federations
+            query = \
+                {
+                    'master': aggregator_name
+                }
+            result = collection.find_one(query)
+            if (result == None):
+                print("No federation found")
+                return None
+
+            members_list = result['members']
+            print(members_list)
+            for member in members_list:
+                if member['member'] == member_name:
+                    return member['m_id']
+
+            return None
+
+        except Exception as e:
+            print(str(e))
+            return None
 
 
 class FederationAggregator(Federation):
     def __init__(self, username):
-        Federation.__init__(self, username)
+        Federation.__init__(self)
+        self.username = username
         self.aggregator = username
+
 
     def create_federation(self, members):
         try:
             if self.username not in members:
                 members.append(self.username)
+
+            members_list = []
+            id_ctr = 2;
+            for member in members:
+                if member == self.username:
+                    m_id = 1
+                    members_list.append({'member': member, 'm_id': m_id})
+                else:
+                    m_id = id_ctr
+                    members_list.append({'member': member, 'm_id': m_id})
+                    id_ctr = id_ctr + 1
 
             collection = self.db.federations
             query = \
@@ -125,10 +203,9 @@ class FederationAggregator(Federation):
             doc = \
                 {
                     'master': self.username,
-                    'members': members
+                    'members': members_list
                 }
             result = collection.find_one_and_replace(query, doc, upsert=True)
-            print(result)
 
             collection = self.db.members
             query = \
@@ -142,13 +219,56 @@ class FederationAggregator(Federation):
                     'role': 'master'
                 }
             result = collection.find_one_and_replace(query, doc, upsert=True)
+
+            print('Successfully created federation:')
+            print('\tAggregator: %s' % self.username)
+            print('\tMembers: %s' % members)
         except Exception as e:
             print(str(e))
 
 
+    def save_members_info(self):
+        if self.aggregator is None:
+            print("No federation to save. Please create or join a federation first.")
+            return
+        try:
+            pki = PKI()
+
+            collection = self.db.federations
+            query = \
+                {
+                    'master': self.aggregator,
+                }
+            result = collection.find_one(query)
+            if result == None:
+                print("No such federation exists")
+                return
+
+            members_list = result['members']
+            members = []
+            for member in members_list:
+                members.append(member['member'])
+            print("Federation members: %s" % members)
+
+            collection = self.db.members
+            for member in members:
+                # if (member == self.username):
+                #    continue
+                result = pki.save_key(member)
+                if (result == False):
+                    print("ERROR saving information")
+                    return
+            print("Members' information saved")
+            return
+        except Exception as e:
+            print(str(e))
+
+
+
 class FederationMember(Federation):
     def __init__(self, username):
-        Federation.__init__(self, username)
+        Federation.__init__(self)
+        self.username = username
 
     def join_federation(self, master_username):
         try:
@@ -157,14 +277,18 @@ class FederationMember(Federation):
             query = \
                 {
                     'master': master_username,
-                    'members': {'$all': [self.username]}
-
                 }
             result = collection.find_one(query)
             if result == None:
-                print(
-                    "Either the federation does not exist, or the central server (aggregator) hasn't added you as a member.")
+                print("No such federation exists.")
                 return
+
+            members_list = result['members']
+            members = []
+            for member in members_list:
+                members.append(member['member'])
+            if self.username not in members:
+                print("The central aggregator hasn't added you as a member to the federation.")
 
             self.aggregator = master_username
 
@@ -180,11 +304,29 @@ class FederationMember(Federation):
                     'role': 'worker'
                 }
             result = collection.find_one_and_replace(query, doc, upsert=True)
-            print(result)
+
+            print('Successfully joined federation created by %s' % master_username)
 
         except Exception as e:
             print(str(e))
 
+
+    def save_aggregator_info(self):
+        if self.aggregator is None:
+            print("No federation to save. Please create or join a federation first.")
+            return
+        try:
+            pki = PKI()
+
+            collection = self.db.members
+            result = pki.save_key(self.aggregator)
+            if (result == True):
+                print("Aggregator information saved")
+            else:
+                print("ERROR saving information")
+            return
+        except Exception as e:
+            print(str(e))
 
 class FederatedXGBoost:
     def __init__(self):
@@ -237,7 +379,8 @@ class FederatedXGBoost:
         xgb.rabit.finalize()
 
 
-def start_job(num_parties, memory, script_path):
+def start_job(num_parties):
+    # Check if training_job is already running on each machine; if so kill it
     with open("hosts.config") as f:
         tmp = f.readlines()
     for h in tmp:
@@ -249,58 +392,23 @@ def start_job(num_parties, memory, script_path):
             if i != -1:
                 p = h[i+1:]
                 h = h[:i]
-            cmd = ["scp", "-P", str(p), "-o",
-           "StrictHostKeyChecking=no", "train_model.py", str(h) + ":~"]
+           
+            kill_cmd = "kill -9 $(ps aux | awk '$12 $28 ~ \"train_model.py\" {print $2}')"
+            ssh_kill_cmd = ["ssh", "-o", "StrictHostKeyChecking=no", str(h), "-p", str(p), kill_cmd]
+           
             process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
+                ssh_kill_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            # for line in iter(process.stdout.readline, b''):
+            #    sys.stdout.write(line)
 
     cmd = ["../dmlc-core/tracker/dmlc-submit", "--cluster", "ssh", "--num-workers",
-           str(num_parties), "--host-file", "hosts.config", "--worker-memory", str(memory) + "g", "/opt/conda/bin/python3", script_path]
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    for line in iter(process.stdout.readline, b''):
-        sys.stdout.write(line)
-
-
-def scp(file, dest_ip, dest_dir):
-    cmd = ["scp", "-v", "-P", "5522", "-o",
-           "StrictHostKeyChecking=no", file, dest_ip + ":" + dest_dir]
+           str(num_parties), "--host-file", "hosts.config", "--worker-memory", "4g", "/opt/conda/bin/python3", "/home/$USER/train_model.py"]
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline, b''):
         line = line.decode("utf-8")
-        if "debug1" not in line:
+        if line[:4] == "2019":
             sys.stdout.write(line)
 
 
-def network_analysis(master, worker_1, worker_2, worker_3):
-    tshark_cmd = 'tshark -r capture.pcap -T fields -e frame.number -e eth.src -e eth.dst -e ip.src -e ip.dst -e frame.len -E header=y -E separator=, > capture.csv'
-    tshark_process = subprocess.Popen(
-        tshark_cmd, stdout=subprocess.PIPE, shell=True)
-    while tshark_process.poll() is None:
-        continue
 
-    capture = pd.read_csv('capture.csv', names=['Frame Number', 'Ethernet Source', 'Ethernet Destination',
-                                                'IP Source', 'IP Destination', 'Frame Length'], header=0)
-    capture.dropna(subset=['IP Source', 'IP Destination'], inplace=True)
-
-    labels = {master: 'Master', worker_1: 'worker_1',
-              worker_2: 'worker_2', worker_3: 'worker_3'}
-    capture.replace(labels, inplace=True)
-
-    capture['Transmission'] = capture.apply(
-        lambda row: row['IP Source'] + ' -> ' + row['IP Destination'], axis=1)
-    count_bytes = capture.groupby('Transmission', as_index=False)[
-        'Transmission', 'Frame Length'].sum()
-    count_bytes.rename(
-        mapper={'Frame Length': 'Total Bytes Transmitted'}, inplace=True, axis=1)
-    count_packets = capture['Transmission'].value_counts().rename_axis(
-        'Transmission').reset_index(name='Number of Packets')
-
-    count_bytes.set_index('Transmission', inplace=True)
-    count_packets.set_index('Transmission', inplace=True)
-    counts = count_packets.join(count_bytes, on='Transmission')
-    counts.sort_values(by='Total Bytes Transmitted',
-                       inplace=True, ascending=False)
-    return counts
