@@ -11,7 +11,7 @@ training_data_path = "/data/hb/hb_train.csv"
 fxgb.load_training_data(training_data_path)
 
 # Train a model
-params = {'max_depth': 3, "objective": "binary:logistic"}
+params = {'max_depth': 3, "objective": "binary:logistic", "eval_metric": ["error", "auc"]}
 num_rounds = 100
 fxgb.train(params, num_rounds)
 

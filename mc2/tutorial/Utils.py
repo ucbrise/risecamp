@@ -7,10 +7,10 @@ from numpy import genfromtxt
 import logging
 import pickle
 import pandas as pd
+import os
 
 db_username = "xgboost"
 db_password = "risecampmc2"
-
 
 class PKI:
     def __init__(self):
@@ -171,6 +171,16 @@ class Federation:
             print(str(e))
             return None
 
+    def save_party_id(self, username, aggregator_name):
+        try:
+            party_id = self.get_federation_member_id(aggregator_name, username)
+            user = os.environ["NB_USER"]
+            with open("/home/%s/.party_id.txt" % user, "w+") as file:
+                file.write(str(party_id))
+        except Exception as e:
+            print(str(e))
+            return None
+
 
 class FederationAggregator(Federation):
     def __init__(self, username):
@@ -252,16 +262,16 @@ class FederationAggregator(Federation):
 
             collection = self.db.members
             for member in members:
-                # if (member == self.username):
-                #    continue
                 result = pki.save_key(member)
                 if (result == False):
                     print("ERROR saving information")
                     return
             print("Members' information saved")
+
+            self.save_party_id(self.username, self.aggregator)
             return
         except Exception as e:
-            print(str(e))
+            print(str(e)) 
 
 
 
@@ -289,6 +299,7 @@ class FederationMember(Federation):
                 members.append(member['member'])
             if self.username not in members:
                 print("The central aggregator hasn't added you as a member to the federation.")
+                return
 
             self.aggregator = master_username
 
@@ -322,12 +333,14 @@ class FederationMember(Federation):
             result = pki.save_key(self.aggregator)
             if (result == True):
                 print("Aggregator information saved")
+                self.save_party_id(self.username, self.aggregator)
             else:
                 print("ERROR saving information")
             return
         except Exception as e:
             print(str(e))
 
+            
 class FederatedXGBoost:
     def __init__(self):
         xgb.rabit.init()
@@ -409,4 +422,12 @@ def start_job(num_parties):
             sys.stdout.write(line)
 
 
+def load_training_data():
+    party_id = None
+    user = os.environ["NB_USER"]
+    with open("/home/%s/.party_id.txt" % user, "r") as file:
+        party_id = file.read()
+    training_data_path = "/data/hb/hb_train_{}.csv".format(party_id)
+    training_data = pd.read_csv(training_data_path, sep=",", header=None)
+    return training_data
 
