@@ -8,7 +8,7 @@ USER $NB_USER
 RUN pip install bokeh==0.13.0
 RUN conda update -n base -c defaults conda
 RUN conda install -c conda-forge psutil setproctitle
-RUN pip install modin[all]
+RUN pip install modin[all]==0.6.2
 RUN pip install s3fs
 
 # perform boot-time initialization by adding a startup script
