@@ -4,10 +4,10 @@ set -o errexit
 set -o verbose
 
 mkdir build
-cp ../base/risecamp_start.sh build
+cp ../../base/risecamp_start.sh build
 
-for proj in clipper example flor integration opaque pywren ray wave; do
-	tag="ucbrise/risecamp2018-$proj"
+for proj in mc2 autopandas modin; do
+	tag="ucbrise/risecamp2019-$proj"
 
 	# generate patched image
 	cat > build/Dockerfile <<-EOF

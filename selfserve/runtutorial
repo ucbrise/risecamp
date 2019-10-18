@@ -2,15 +2,15 @@
 set -o errexit
 
 if [[ "$1" = "" ]] || ! [[ "$2" = "" ]]; then
-  echo "Usage: ./runtutorial (clipper|flor|integration|opaque|pywren|ray|wave)" >&2
+  echo "Usage: ./runtutorial (modin|autopandas|mc2)" >&2
   exit 1
 fi
 
 PROJ=$1
-TAG="ucbrise/risecamp2018-${PROJ}:latest"
+TAG="ucbrise/risecamp2019-${PROJ}:latest"
 
-# enable access with password "risecamp2018"
-NOTEBOOK_FLAGS+=" --NotebookApp.password='sha1:3ec466c1b38d:6b4670be0553e483ca5ddde58bb4765c8ab40c10'"
+# enable access with password "risecamp2019"
+NOTEBOOK_FLAGS+=" --NotebookApp.password='sha1:d3b13647d5d3:7920cbf16c6426590736d941cba5d1d2e3252060'"
 NOTEBOOK_FLAGS+=" --NotebookApp.allow_origin='*'"
 #NOTEBOOK_FLAGS+=" --NotebookApp.allow_remote_access=True"
 
@@ -20,25 +20,17 @@ docker pull "$TAG"
 # boot container
 echo "************************************************************"
 echo "***"
-echo "*** RISE Camp 2018"
+echo "*** RISE Camp 2019"
 echo "***"
 echo "*** Tutorial: $PROJ"
 echo "*** Login URL: http://127.0.0.1:8080/camp/$PROJ"
-echo "*** Password: risecamp2018"
+echo "*** Password: risecamp2019"
 echo "***"
 echo "************************************************************"
 echo
 
-if [[ "$PROJ" = "ray" ]]; then
-  DOCKER_RUN_FLAGS+=" -p 127.0.0.1:3000:3000"
-  DOCKER_RUN_FLAGS+=" -p 127.0.0.1:6006:6006"
-  DOCKER_RUN_FLAGS+=" -p 127.0.0.1:8889:8889"
-fi
-
-if [[ "$PROJ" = "clipper" ]] || [[ "$PROJ" = "integration" ]]; then
-  docker network create "${PROJ}_network" &> /dev/null || true
-  DOCKER_RUN_FLAGS+=" --network=${PROJ}_network"
-  DOCKER_RUN_FLAGS+=" -v /tmp:/tmp"
+if [[ "$PROJ" = "mc2" ]]; then
+  DOCKER_RUN_FLAGS+=" --network 'campnet-mc2'"
 fi
 
 docker run \
@@ -46,7 +38,6 @@ docker run \
   --name "risecamp_${PROJ}" \
   --user root \
   -p 127.0.0.1:8080:8080 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
   --memory 16g \
   --shm-size 16g \
   -e "NOTEBOOK_FLAGS=${NOTEBOOK_FLAGS}" \
