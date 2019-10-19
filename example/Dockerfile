@@ -2,6 +2,7 @@ FROM ucbjey/risecamp2018-base:2b580e66f1f7
 
 # use apt-get as user "root" to install ubuntu packages
 USER root
+RUN apt-get update
 RUN apt-get install -y g++
 
 # use "$NB_USER" when installing python packages
